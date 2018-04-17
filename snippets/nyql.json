@@ -1,0 +1,414 @@
+{
+    "Simple": {
+        "prefix": "nyqlSelect",
+        "description": "Simple NyQL select query.",
+        "body": [
+            "\\$DSL.select {",
+            "    TARGET (TABLE('${1:table}').alias('${2:alias}'))",
+            "    ",
+            "    FETCH ()",
+            "    ",
+            "    ${0}",
+            "}"
+        ]
+    },
+
+    "Joins": {
+        "prefix": "nyqlSelect",
+        "description": "NyQL select query with a join.",
+        "body": [
+            "\\$DSL.select {",
+            "    TARGET (TABLE('${1:table}').alias('${2:alias}'))",
+            "    ",
+            "    JOIN {",
+            "        ${3|INNER_JOIN,LEFT_JOIN,CROSS_JOIN|} (TABLE('${4:t2}').alias('${5:ta}')) ON ${2}.${6:c1}, ${5}.${7:c2}",    
+            "    }",
+            "    ",
+            "    FETCH ()",
+            "    ",
+            "    WHERE {",
+            "        ${0}",
+            "    }",
+            "}"
+        ]
+    },
+
+    "Select Insert": {
+        "prefix": "nyqlSelect",
+        "description": "NyQL select query and insert into another table.",
+        "body": [
+            "\\$DSL.select {",
+            "    TARGET (TABLE('${1:table}').alias('${2:alias}'))",
+            "    ",
+            "    FETCH (${2}.${3:c1}, ${2}.${4:c2})",
+            "    ",
+            "    INTO (TABLE('${5:tb}').alias('${6:ta}'),",
+            "            ${6}.${3},",
+            "            ${6}.${4}",
+            "         )",
+            "    ",
+            "    WHERE {",
+            "        ${0}",
+            "    }",
+            "}"
+        ]
+    },
+
+    "Select Insert Temp Table": {
+        "prefix": "nyqlSelect",
+        "description": "NyQL select query and insert into a temp table.",
+        "body": [
+            "\\$DSL.select {",
+            "    TARGET (TABLE('${1:table}').alias('${2:alias}'))",
+            "    ",
+            "    FETCH (${2}.${3:c1}, ${2}.${4:c2})",
+            "    ",
+            "    INTO_TEMP (TABLE('${5:tb}').alias('${6:ta}'))",
+            "    ",
+            "    WHERE {",
+            "        ${0}",
+            "    }",
+            "}"
+        ]
+    },
+
+    "Update Query": {
+        "prefix": "nyqlUpdate",
+        "description": "NyQL update query.",
+        "body": [
+            "\\$DSL.update {",
+            "    TARGET (TABLE('${1:table}').alias('${2:alias}'))",
+            "    ",
+            "    SET {",
+            "        EQ (${2}.${3:column}, PARAM('${4:parameter}'))",    
+            "    }",
+            "    ",
+            "    WHERE {",
+            "        EQ (${2}.${5:column}, PARAM('${6:parameter}'))",    
+            "    }",
+            "}"
+        ]
+    },
+
+    "Insert Query": {
+        "prefix": "nyqlInsert",
+        "description": "Simple NyQL insert query.",
+        "body": [
+            "\\$DSL.insert {",
+            "    TARGET (TABLE('${1:table}').alias('${2:alias}'))",
+            "    ",
+            "    SET {",
+            "        EQ (${2}.${3:column}, PARAM('${4:parameter}'))",    
+            "    }",
+            "}"
+        ]
+    },
+
+    "Insert or Load Query": {
+        "prefix": "nyqlInsertOrLoad",
+        "description": "If the record exist, then the record returns, else inserts a new one.",
+        "body": [
+            "\\$DSL.insertOrLoad {",
+            "    TARGET (TABLE('${1:table}').alias('${2:alias}'))",
+            "    ",
+            "    SET {",
+            "        EQ (${2}.${3:column}, PARAM('${4:parameter}'))",    
+            "        EQ (${2}.${5:column}, PARAM('${6:parameter}'))",    
+            "    }",
+            "}"
+        ]
+    },
+
+    "Upsert Query": {
+        "prefix": "nyqlUpsert",
+        "description": "If the record exist, then update the record, else inserts a new one.",
+        "body": [
+            "\\$DSL.upsert {",
+            "    TARGET (TABLE('${1:table}').alias('${2:alias}'))",
+            "    ",
+            "    SET {",
+            "        EQ (${2}.${3:column}, PARAM('${4:parameter}'))",    
+            "        EQ (${2}.${5:column}, PARAM('${6:parameter}'))",    
+            "    }",
+            "    ",
+            "    WHERE {",
+            "        EQ (${2}.${7:column}, PARAM('${8:parameter}'))",    
+            "    }",
+            "}"
+        ]
+    },
+
+    "Upsert Query - Return Updated": {
+        "prefix": "nyqlUpsert",
+        "description": "If the record exist, then update the record, else inserts a new one. And finally return the upserted record.",
+        "body": [
+            "\\$DSL.upsert {",
+            "    TARGET (TABLE('${1:table}').alias('${2:alias}'))",
+            "    ",
+            "    SET {",
+            "        EQ (${2}.${3:column}, PARAM('${4:parameter}'))",    
+            "        EQ (${2}.${5:column}, PARAM('${6:parameter}'))",    
+            "    }",
+            "    ",
+            "    WHERE {",
+            "        EQ (${2}.${7:column}, PARAM('${8:parameter}'))",    
+            "    }",
+            "    ",
+            "    RETURN_AFTER()",
+            "}"
+        ]
+    },
+
+    "Upsert Query - Return Before Update": {
+        "prefix": "nyqlUpsert",
+        "description": "If the record exist, then update the record, else inserts a new one. And finally return the record before upsert.",
+        "body": [
+            "\\$DSL.upsert {",
+            "    TARGET (TABLE('${1:table}').alias('${2:alias}'))",
+            "    ",
+            "    SET {",
+            "        EQ (${2}.${3:column}, PARAM('${4:parameter}'))",    
+            "        EQ (${2}.${5:column}, PARAM('${6:parameter}'))",    
+            "    }",
+            "    ",
+            "    WHERE {",
+            "        EQ (${2}.${7:column}, PARAM('${8:parameter}'))",    
+            "    }",
+            "    ",
+            "    RETURN_BEFORE()",
+            "}"
+        ]
+    },
+
+    "Upsert Query - Return Columns": {
+        "prefix": "nyqlUpsert",
+        "description": "If the record exist, then update the record, else inserts a new one. And finally return the upserted columns.",
+        "body": [
+            "\\$DSL.upsert {",
+            "    TARGET (TABLE('${1:table}').alias('${2:alias}'))",
+            "    ",
+            "    SET {",
+            "        EQ (${2}.${3:column}, PARAM('${4:parameter}'))",    
+            "        EQ (${2}.${5:column}, PARAM('${6:parameter}'))",    
+            "    }",
+            "    ",
+            "    WHERE {",
+            "        EQ (${2}.${7:column}, PARAM('${8:parameter}'))",    
+            "    }",
+            "    ",
+            "    RETURN_COLUMNS (${2}.${3}, ${2}.${5})",
+            "}"
+        ]
+    },
+
+    "Bulk Insert Query": {
+        "prefix": "nyqlBulkInsert",
+        "description": "NyQL batch insert query.",
+        "body": [
+            "\\$DSL.bulkInsert {",
+            "    TARGET (TABLE('${1:table}').alias('${2:alias}'))",
+            "    ",
+            "    SET {",
+            "        EQ (${2}.${3:column}, PARAM('${4:parameter}'))",    
+            "        EQ (${2}.${5:column}, PARAM('${6:parameter}'))",    
+            "    }",
+            "}"
+        ]
+    },
+
+    "Delete Query": {
+        "prefix": "nyqlDelete",
+        "description": "Simple NyQL delete query.",
+        "body": [
+            "\\$DSL.delete {",
+            "    TARGET (TABLE('${1:table}').alias('${2:alias}'))",
+            "    ",
+            "    WHERE {",
+            "        EQ (${2}.${3:column}, PARAM('${4:parameter}'))",    
+            "    }",
+            "}"
+        ]
+    },
+
+    "Truncate Query": {
+        "prefix": "nyqlTruncate",
+        "description": "NyQL truncate table query.",
+        "body": "\\$DSL.truncate ('${1:tableName}')"
+    },
+
+    "Inline Select": {
+        "prefix": "nyqlInlineQuery",
+        "description": "Simple NyQL inline select query.",
+        "body": [
+            "QUERY {",
+            "    TARGET (TABLE('${1:table}').alias('${2:alias}'))",
+            "    ",
+            "    FETCH ()",
+            "    ",
+            "    WHERE {",
+            "        ${0}",
+            "    }",
+            "}"
+        ]
+    },
+    
+    "Numbers": {
+        "prefix": "nyqlValueTable",
+        "description": "Converts set of numbers to a database table.",
+        "body": "TABLE ([${1:v1}, ${2:v2}, ${3:v3}], '${4:columnName}').alias('${5:tableAlias}')${0}"
+    },
+
+    "Numbers Range": {
+        "prefix": "nyqlValueTable",
+        "description": "Converts an integer range to a database table.",
+        "body": "TABLE (${1:start}..${2:end}, '${3:columnName}').alias('${4:tableAlias}')${0}"
+    },
+
+    "Strings": {
+        "prefix": "nyqlValueTable",
+        "description": "Converts set of strings to a database table.",
+        "body": "TABLE (STR_LIST['${1:v1}', '${2:v2}', '${3:v3}'], '${4:columnName}').alias('${5:tableAlias}')${0}"
+    },
+
+    "Union": {
+        "prefix": "nyqlUnionQuery",
+        "description": "Union all query of combination of two queries.",
+        "body": [
+            "def ${1:firstQuery} = \\$DSL.select {",
+            "    ",
+            "    // Write your select query here",
+            "    ",
+            "}",
+            "",
+            "def ${2:secondQuery} = \\$DSL.select {",
+            "    ",
+            "    // Write your other select query here",
+            "}",
+            "",
+            "\\$DSL.union (${1}, ${2})"
+        ]
+    },
+
+    "Unique Union": {
+        "prefix": "nyqlUnionQuery",
+        "description": "Union all query of combination of two queries having only unique values.",
+        "body": [
+            "def ${1:firstQuery} = \\$DSL.select {",
+            "    ",
+            "    // Write your select query here",
+            "    ",
+            "}",
+            "",
+            "def ${2:secondQuery} = \\$DSL.select {",
+            "    ",
+            "    // Write your other select query here",
+            "}",
+            "",
+            "\\$DSL.unionDistinct (${1}, ${2})"
+        ]
+    },
+
+    "Script": {
+        "prefix": "nyqlScript",
+        "description": "NyQL script with some business logic going on.",
+        "body": [
+            "\\$DSL.script {",
+            "    ",
+            "    // def result = RUN ('path/to/script')",
+            "    ",
+            "    // Write your business logic here",
+            "    ",
+            "}"
+        ]
+    },
+
+    "Transaction": {
+        "prefix": "nyqlTransaction",
+        "description": "NyQL transaction with explicit auto commit",
+        "body": [
+            "    TRANSACTION {",
+            "    ",
+            "        // Execute your queries here",
+            "        // RUN ('path/to/script1')",
+            "        // RUN ('path/to/script2')",
+            "",
+            "        COMMIT()",
+            "    }"
+        ]
+    },
+
+    "Transaction - Auto Commit": {
+        "prefix": "nyqlTransaction",
+        "description": "NyQL transaction with auto commit",
+        "body": [
+            "    TRANSACTION {",
+            "        AUTO_COMMIT()",
+            "    ",
+            "        // Execute your queries here",
+            "        // RUN ('path/to/script1')",
+            "        // RUN ('path/to/script2')",
+            "    }"
+        ]
+    },
+
+    "Call DB Function": {
+        "prefix": "nyqlCallDbFunction",
+        "description": "Call database procedure or function.",
+        "body": [
+            "\\$DSL.dbFunction ('${1:functionName}',",
+            "    [",
+            "        \\$DSL.PARAM('${2:paramName}', '${3|IN,OUT,IN_OUT|}', '${4:mappingName}')",
+            "        \\$DSL.PARAM('${5:paramName}', '${6|IN,OUT,IN_OUT|}', '${7:mappingName}')",
+            "    ]",
+            "}"
+        ]
+    },
+
+    "Session Variable": {
+        "prefix": "nyqlSessionVariable",
+        "description": "Access a variable from session.",
+        "body": "\\$SESSION.${1:variableName}"
+    },
+
+    "Parameter": {
+        "prefix": "nyqlParameter",
+        "description": "NyQL single value parameter.",
+        "body": "PARAM('${1:paramName}')"
+    },
+
+    "Parameter List": {
+        "prefix": "nyqlParameter",
+        "description": "NyQL list parameter.",
+        "body": "PARAM_LIST('${1:paramName}')"
+    },
+
+    "Parameter Timestamp ISO-8601": {
+        "prefix": "nyqlParameter",
+        "description": "NyQL timestamp parameter with ISO 8601 format.",
+        "body": "PARAM_TIMESTAMP('${1:paramName}')"
+    },
+
+    "Parameter Timestamp Custom": {
+        "prefix": "nyqlParameter",
+        "description": "NyQL timestamp parameter with custom format.",
+        "body": "PARAM_TIMESTAMP('${1:paramName}', '${2:tsFormat}')"
+    },
+
+    "Parameter Date": {
+        "prefix": "nyqlParameter",
+        "description": "NyQL date parameter with format of 'yyyy-mm-dd'.",
+        "body": "PARAM_Date('${1:paramName}')"
+    },
+
+    "Parameter Binary": {
+        "prefix": "nyqlParameter",
+        "description": "NyQL binary value parameter.",
+        "body": "PARAM_BINARY('${1:paramName}')"
+    },
+
+    "Join Clause": {
+        "prefix": "nyqlJoinClause",
+        "description": "NyQL join clause",
+        "body": "${1|INNER_JOIN,LEFT_JOIN,CROSS_JOIN|} (TABLE('${2:t2}').alias('${3:ta}')) ON ${4:a2}.${5:c1}, ${3}.${6:c2}"
+    }
+}
