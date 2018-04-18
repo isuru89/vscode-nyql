@@ -9,22 +9,21 @@ import * as vscode from "vscode";
 import { NyQLCompletionItemProvider } from "./nySuggest";
 
 import { NyConnection } from "./nyModel";
-import nyDb from "./nyDb";
 import nySettings from "./nySettings";
 
 const nyConnectionInfo: NyConnection  = {
   dialect: 'mysql',
-  host: 'localhost',
+  host: 'cmddtennakoon',
   username: 'root',
-  password: 'root',
-  databaseName: 'accello'
+  password: '',
+  databaseName: 'insight6'
 } as NyConnection;
 
 let connection;
 
 export async function activate(context: vscode.ExtensionContext) {
-  console.log(nySettings.getScriptsDir());
-
+  const nyDb = nySettings.getDb();
+  
   const _ = await nyDb.reloadConnection(nyConnectionInfo);
   await nyDb.loadSchema();
   //console.log(tblNames);

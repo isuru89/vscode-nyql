@@ -57,7 +57,12 @@ class NyQLDatabaseConnection {
     }
 
     validTableColumn(tableName: string, columnName: string): boolean {
-        return this.schema.has(tableName) && this.schema.get(tableName).filter(c => c === columnName).length === 1;
+        if (this.schema.has(tableName)) {
+            return this.schema.get(tableName).filter(c => c === columnName).length === 1;
+        } else {
+            const tbName = tableName.toLowerCase();
+            return this.schema.has(tbName) && this.schema.get(tbName).filter(c => c == columnName).length === 1;
+        }
     }
 
 }

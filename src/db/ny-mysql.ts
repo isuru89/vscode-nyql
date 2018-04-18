@@ -39,7 +39,8 @@ export class NyMySqlImpl implements NyDatabaseImpl {
             const tblNames = rs.map(r => r[colName]);
 
             for (let i = 0; i < tblNames.length; i++) {
-                const tbl = tblNames[i];
+                // @TODO load this from configurations
+                const tbl = this.toTitleCase(tblNames[i]);
                 tables.add(new NyTable(tbl, db));
 
                 const [colDefs, colFields] = await this.connection.query('DESCRIBE ' + tbl + ';');
@@ -53,6 +54,10 @@ export class NyMySqlImpl implements NyDatabaseImpl {
         } else {
             return Promise.resolve(new NySchemaInfo());
         }
+    }
+
+    private toTitleCase(str: string): string {
+        return str.split('_').map(w => w.charAt(0).toUpperCase() + w.substring(1)).join('_');
     }
 
     private _mapToCols(colDefs: mysql.RowDataPacket[]): Array<NyColumn> {

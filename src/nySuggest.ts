@@ -1,11 +1,12 @@
 import * as vscode from "vscode";
 
 import nySettings from "./nySettings";
-import nyDb from "./nyDb";
 import { isPositionInString } from "./utils";
 
 import * as fs from 'fs';
 import * as path from 'path';
+
+const nyDb = nySettings.getDb();
 
 const DSL_COMPLETION_ITEMS = [
     new vscode.CompletionItem('select', vscode.CompletionItemKind.Function),
@@ -30,6 +31,13 @@ const NYQL_GLOB_VARIABLES = [
     new vscode.CompletionItem('SESSION', vscode.CompletionItemKind.Constant),
     new vscode.CompletionItem('DB', vscode.CompletionItemKind.Constant),
     new vscode.CompletionItem('IMPORT', vscode.CompletionItemKind.Constant),
+];
+
+const NYQL_GLOB_VARIABLES_D = [
+  new vscode.CompletionItem('$DSL', vscode.CompletionItemKind.Constant),
+  new vscode.CompletionItem('$SESSION', vscode.CompletionItemKind.Constant),
+  new vscode.CompletionItem('$DB', vscode.CompletionItemKind.Constant),
+  new vscode.CompletionItem('$IMPORT', vscode.CompletionItemKind.Constant),
 ];
 
 const _NYQL_ALIAS_SNIPPET = new vscode.CompletionItem('alias', vscode.CompletionItemKind.Method);
@@ -139,8 +147,7 @@ export class NyQLCompletionItemProvider
           }
         }
       } else if (context.triggerCharacter === '(') {
-          const alsItems = this._collectAllAliases(document, position)
-            .map(als => new vscode.CompletionItem(als, vscode.CompletionItemKind.Property));
+          const alsItems = this._aliasCompletedItems(document, position);
           resolve(this.withTables().concat(alsItems));
       } else if (context.triggerCharacter === '$') {
           resolve(NYQL_GLOB_VARIABLES);
@@ -154,9 +161,14 @@ export class NyQLCompletionItemProvider
     });
   }
 
-
   private _miscCompletionItems(document: vscode.TextDocument, position: vscode.Position) {
-    return NYQL_COLUMN_HELPER_ITEMS.concat(NYQL_GLOB_VARIABLES).concat(DSL_COMPLETION_ITEMS);
+    return this._aliasCompletedItems(document, position).concat(NYQL_COLUMN_HELPER_ITEMS)
+          .concat(NYQL_GLOB_VARIABLES_D).concat(DSL_COMPLETION_ITEMS);
+  }
+
+  private _aliasCompletedItems(document: vscode.TextDocument, position: vscode.Position) {
+    return this._collectAllAliases(document, position)
+      .map(als => new vscode.CompletionItem(als, vscode.CompletionItemKind.Property));
   }
 
   private _collectAllAliases(document: vscode.TextDocument, position: vscode.Position) {
@@ -168,7 +180,7 @@ export class NyQLCompletionItemProvider
     do {
         m = re.exec(textTillPos);
         if (m) {
-            alss.add(m[2] + "-" + m[1]);
+            alss.add(m[2]);
         }
     } while (m)
     return Array.from(alss);
