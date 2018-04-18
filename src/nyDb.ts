@@ -1,37 +1,42 @@
+import { NyTable, NyColumn, NyConnection, NyDatabase, NyDatabaseImpl, NySchemaInfo } from "./nyModel";
+import { NyMySqlImpl } from "./db/ny-mysql";
 
-import * as mysql from "mysql2/promise";
-import * as tmysql from "mysql2";
+const _DBS = {
+    "mysql": new NyMySqlImpl()
+}
 
 class NyQLDatabaseConnection {
 
-    private connection : mysql.Connection;
+    private options: NyConnection;
+    private dbImpl: NyDatabaseImpl;
+    private schemaRef: NySchemaInfo;
     private schema: Map<string, string[]>;
 
-    async reloadConnection(options) {
-        this.connection = await mysql.createConnection(options);
-        return this.connection;
+    reloadConnection(options: NyConnection) {
+        this.options = options;
+        let dbImpl = _DBS[options.dialect.toLowerCase()] as NyDatabaseImpl;
+        if (!dbImpl) {
+            return Promise.reject(`No dialect is found for the name '${options.dialect}'!`)
+        }
+
+        return new Promise((resolve, reject) => {
+            dbImpl.reloadConnection(options).then(impl => {
+                this.dbImpl = impl
+                resolve(impl);
+            }).catch(err => {
+                reject(err);
+            })
+        });
     }
 
-    async loadSchema() : Promise<string[]> {
-        const [rows, fields] = await this.connection.query('SHOW TABLES;');
-        const colName = fields[0].name;
+    async loadSchema() {
+        let schema = await this.dbImpl.loadSchema();
+        this.schemaRef = schema;
+
         this.schema = new Map<string, string[]>();
-
-        if (rows instanceof Array) {
-            const rs = rows as mysql.RowDataPacket[];
-            const tblNames = rs.map(r => r[colName]);
-
-            for (let i = 0; i < tblNames.length; i++) {
-                const tbl = tblNames[i];
-                const [colDefs, colFields] = await this.connection.query('DESCRIBE ' + tbl + ';');
-                const cols = colDefs as mysql.RowDataPacket[];
-                this.schema.set(tbl, cols.map(c => c['Field']));
-            }
-            return Promise.resolve(tblNames);
-
-        } else {
-            return Promise.resolve([]);
-        }
+        this.schemaRef.tables.forEach(t => {
+            this.schema.set(t.name, this.schemaRef.columns.get(t.name).map(c => c.name));
+        });
     }
 
     getTables(): string[] {
@@ -40,6 +45,15 @@ class NyQLDatabaseConnection {
 
     getColumns(tableName: string): string[] {
         return this.schema.get(tableName);
+    }
+
+    getColumn(tableName: string, columnName: string) : NyColumn {
+        const _tmp = this.schemaRef.columns.get(tableName).filter(c => c.name == columnName);
+        if (_tmp && _tmp.length > 0) {
+            return _tmp[0];
+        } else {
+            return null;
+        }
     }
 
     validTableColumn(tableName: string, columnName: string): boolean {

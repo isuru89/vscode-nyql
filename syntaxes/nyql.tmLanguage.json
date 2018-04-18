@@ -407,12 +407,20 @@
 		"keyword-language": {
 			"patterns": [
 				{
-					"match": "\\b(TARGET|JOIN|FETCH|WHERE|ORDER_BY|GROUP_BY|HAVING|LIMIT|OFFSET|ON|TABLE|SET)\\b",
+					"match": "\\b(TARGET|JOIN|FETCH|DISTINCT_FETCH|WHERE|ORDER_BY|GROUP_BY|HAVING|LIMIT|OFFSET|ON|TABLE|SET|EXPECT|DATA|ASC|DESC)\\b",
 					"name": "keyword.control.nyql"
 				},
 				{
 					"match": "\\b(TRANSACTION|AUTO_COMMIT|COMMIT|CHECKPOINT)\\b",
 					"name": "keyword.control.tx.nyql"
+				},
+				{
+					"match": "\\b(INNER_JOIN|LEFT_JOIN|LEFT_OUTER_JOIN|RIGHT_JOIN|RIGHT_OUTER_JOIN|CROSS_JOIN|FULL_JOIN)\\b",
+					"name": "keyword.control.joins.nyql"
+				},
+				{
+					"match": "\\b(ALL|AND|ANY|EQ|EXIST|GT|GTE|IFNULL|IFNOTNULL|IN|ISNULL|LIKE|LT|LTE|NEQ|NIN|NOTBETWEEN|NOTEXIST|NOTLIKE|NOTNULL|OR|RAW)\\b",
+					"name": "keyword.control.operator.nyql"
 				},
 				{
 					"match": "\\b(try|catch|finally|throw)\\b",
@@ -469,10 +477,6 @@
 		},
 		"keyword-operator": {
 			"patterns": [
-				{
-					"match": "\\b(ALL|AND|ANY|EQ|EXIST|GT|GTE|IFNULL|IFNOTNULL|IN|ISNULL|LIKE|LT|LTE|NEQ|NIN|NOTBETWEEN|NOTEXIST|NOTLIKE|NOTNULL|OR|RAW)\\b",
-					"name": "keyword.operator.nyql"
-				},
 				{
 					"match": "\\b(as)\\b",
 					"name": "keyword.operator.as.groovy"
@@ -570,6 +574,20 @@
 				},
 				{
 					"captures": {
+						"2": {
+							"name": "variable.language.alias.nyql"
+						},
+						"4": {
+							"name": "support.function.alias.nyql"
+						},
+						"5": {
+							"name": "variable.language.alias.nyql"
+						}
+					},
+					"match": "\\b((\\w+)\\.)?(\\w+)\\.(alias)\\s*\\(\\s*['\"](\\w+)['\"]\\s*\\)"
+				},
+				{
+					"captures": {
 						"1": {
 							"name": "support.function.alias.nyql"
 						},
@@ -577,8 +595,15 @@
 							"name": "variable.language.alias.nyql"
 						}
 					},
-					"match": "\\.(alias)\\s*\\(\\s*(['\"][a-zA-Z0-9_]+['\"])\\s*\\)"
-					
+					"match": "\\.(alias)\\s*\\(\\s*['\"](\\w+)['\"]\\s*\\)"
+				},
+				{
+					"captures": {
+						"1": {
+							"name": "variable.language.alias.nyql"
+						}
+					},
+					"match": "\\b(\\w+)\\.(\\w+)\\b"
 				},
 				{
 					"match": "\\b(this|super)\\b",

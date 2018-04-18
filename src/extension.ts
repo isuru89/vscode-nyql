@@ -8,23 +8,27 @@ import * as vscode from "vscode";
 
 import { NyQLCompletionItemProvider } from "./nySuggest";
 
+import { NyConnection } from "./nyModel";
 import nyDb from "./nyDb";
+import nySettings from "./nySettings";
 
-const mysqlConnectionInfo = {
+const nyConnectionInfo: NyConnection  = {
+  dialect: 'mysql',
   host: 'localhost',
-  user: 'root',
+  username: 'root',
   password: 'root',
-  database: 'accello'
-}
+  databaseName: 'accello'
+} as NyConnection;
 
 let connection;
 
-
-
 export async function activate(context: vscode.ExtensionContext) {
-  const _ = await nyDb.reloadConnection(mysqlConnectionInfo);
-  const tblNames = await nyDb.loadSchema();
-  console.log(tblNames);
+  console.log(nySettings.getScriptsDir());
+
+  const _ = await nyDb.reloadConnection(nyConnectionInfo);
+  await nyDb.loadSchema();
+  //console.log(tblNames);
   
-  context.subscriptions.push(vscode.languages.registerCompletionItemProvider("nyql", new NyQLCompletionItemProvider(), '.'));
+  context.subscriptions.push(vscode.languages.registerCompletionItemProvider("nyql", new NyQLCompletionItemProvider(), 
+    '.', '(', '$', '/', "'", '\"'));
 }
