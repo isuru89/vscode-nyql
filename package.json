@@ -4,6 +4,9 @@
   "description": "NyQL Extension for Visual Studio Code",
   "version": "0.0.1",
   "publisher": "nyql",
+  "repository": {
+    "url": "https://github.com/isuru89/vscode-nyql"
+  },
   "engines": {
     "vscode": "^1.22.0"
   },
@@ -27,6 +30,96 @@
           ".groovy"
         ],
         "configuration": "./language-configuration.json"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "NyQL Settings",
+      "properties": {
+        "nyql.scriptsRootDir": {
+          "type": "string",
+          "default": "",
+          "description": "Scripts directory relative to the workspace root directory."
+        },
+        "nyql.defaultConnection": {
+          "type": "string",
+          "default": "",
+          "description": "Default connection name to connect when NyQL plugin is loaded."
+        },
+        "nyql.connections": {
+          "type": "array",
+          "title": "Connections",
+          "default": [],
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Connection Name"
+              },
+              "dialect": {
+                "type": "string",
+                "enum": [
+                  "MySQL"
+                ],
+                "description": "Connection Dialect",
+                "required": false
+              },
+              "host": {
+                "type": "string",
+                "description": "Database host name"
+              },
+              "port": {
+                "type": "number",
+                "description": "Port number"
+              },
+              "username": {
+                "type": "string",
+                "description": "Database authentication username"
+              },
+              "password": {
+                "type": "string",
+                "description": "Database authentication password"
+              },
+              "databaseName": {
+                "type": "string",
+                "description": "Database name"
+              },
+              "autoCapitalizeTableNames": {
+                "type": "boolean",
+                "required": false,
+                "description": "Should auto capitalize table names when inserting Table reference names. This affects in mysql only."
+              }
+            } 
+          }
+        }
+      }
+    },
+    "commands": [
+      {
+        "title": "Set NyQL Root Scripts Directory",
+        "command": "nyql.setRootScriptDir",
+        "category": "NyQL"
+      },
+      {
+        "title": "Add New NyQL Database Connection",
+        "command": "nyql.createNewNyQLConnection",
+        "category": "NyQL" 
+      },
+      {
+        "title": "Remove Existing NyQL Connection",
+        "command": "nyql.removeNyQLConnection",
+        "category": "NyQL" 
+      },
+      {
+        "title": "Connect to a Database",
+        "command": "nyql.connectForNyQL",
+        "category": "NyQL" 
+      },
+      {
+        "title": "Reload the Schema of Current Database",
+        "command": "nyql.reloadSchema",
+        "category": "NyQL" 
       }
     ],
     "grammars": [

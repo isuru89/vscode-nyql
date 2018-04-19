@@ -26,13 +26,6 @@ const DSL_COMPLETION_ITEMS = [
     new vscode.CompletionItem('unionDistinct', vscode.CompletionItemKind.Function),
 ];
 
-const NYQL_GLOB_VARIABLES = [
-    new vscode.CompletionItem('DSL', vscode.CompletionItemKind.Constant),
-    new vscode.CompletionItem('SESSION', vscode.CompletionItemKind.Constant),
-    new vscode.CompletionItem('DB', vscode.CompletionItemKind.Constant),
-    new vscode.CompletionItem('IMPORT', vscode.CompletionItemKind.Constant),
-];
-
 const NYQL_GLOB_VARIABLES_D = [
   new vscode.CompletionItem('$DSL', vscode.CompletionItemKind.Constant),
   new vscode.CompletionItem('$SESSION', vscode.CompletionItemKind.Constant),

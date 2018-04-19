@@ -1,4 +1,7 @@
+import { Disposable } from "vscode";
+
 export class NyConnection {
+    name: string;
     dialect: string;
     host: string;
     port: number;
@@ -7,6 +10,7 @@ export class NyConnection {
     databaseName: string;
     
     additionalOptions?: string;
+    autoCapitalizeTableNames?: boolean;
 }
 
 export class NySchemaInfo {
@@ -19,6 +23,8 @@ export interface NyDatabaseImpl {
     reloadConnection(connectionInfo: NyConnection) : Promise<NyDatabaseImpl>;
 
     loadSchema() : Promise<NySchemaInfo>;
+
+    close();
 }
 
 export class NyDatabase {

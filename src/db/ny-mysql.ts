@@ -6,8 +6,16 @@ export class NyMySqlImpl implements NyDatabaseImpl {
 
     private conOptions: mysql.ConnectionOptions;
     private connection: mysql.Connection;
+    private originalCon: NyConnection;
 
-    reloadConnection(connectionInfo: NyConnection): Promise<NyDatabaseImpl> {
+    async close() {
+        this.conOptions = null;
+        await this.connection.end();
+        this.connection = null;
+    }
+
+    async reloadConnection(connectionInfo: NyConnection) {
+        this.originalCon = connectionInfo;
         this.conOptions = {
             host: connectionInfo.host,
             port: connectionInfo.port || 3306,
@@ -16,12 +24,8 @@ export class NyMySqlImpl implements NyDatabaseImpl {
             database: connectionInfo.databaseName
         } as mysql.ConnectionOptions;
 
-        return new Promise((resolve, reject) => {
-            mysql.createConnection(this.conOptions).then(conn => {
-                this.connection = conn;
-                resolve(this);
-            }).catch(err => reject(err));
-        });
+        this.connection = await mysql.createConnection(this.conOptions);
+        return this;
     }
 
     async loadSchema(): Promise<NySchemaInfo> {
@@ -39,8 +43,7 @@ export class NyMySqlImpl implements NyDatabaseImpl {
             const tblNames = rs.map(r => r[colName]);
 
             for (let i = 0; i < tblNames.length; i++) {
-                // @TODO load this from configurations
-                const tbl = this.toTitleCase(tblNames[i]);
+                const tbl = this.originalCon.autoCapitalizeTableNames ? this.toTitleCase(tblNames[i]) : tblNames[i];
                 tables.add(new NyTable(tbl, db));
 
                 const [colDefs, colFields] = await this.connection.query('DESCRIBE ' + tbl + ';');
@@ -50,9 +53,9 @@ export class NyMySqlImpl implements NyDatabaseImpl {
 
             schemaInfo.tables = Array.from(tables);
             schemaInfo.columns = columns;
-            return Promise.resolve(schemaInfo);
+            return schemaInfo;
         } else {
-            return Promise.resolve(new NySchemaInfo());
+            return new NySchemaInfo();
         }
     }
 

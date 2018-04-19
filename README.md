@@ -1,6 +1,9 @@
-# vscode-nyql README
+# Visual Studio Extension for NyQL
 
-This is the README for your extension "vscode-nyql". After writing up a brief description, we recommend including the following sections.
+This extension adds language support for NyQL queries, including,
+ * Syntax highlighting
+ * Database table/column auto-completion
+ * Snippets
 
 ## Features
 

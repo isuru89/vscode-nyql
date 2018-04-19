@@ -1,32 +1,44 @@
 import { NyTable, NyColumn, NyConnection, NyDatabase, NyDatabaseImpl, NySchemaInfo } from "./nyModel";
 import { NyMySqlImpl } from "./db/ny-mysql";
+import { Disposable } from "vscode";
 
 const _DBS = {
     "mysql": new NyMySqlImpl()
 }
 
-class NyQLDatabaseConnection {
+export class NyQLDatabaseConnection {
+
+    // @TODO keep track of foreign keys
 
     private options: NyConnection;
     private dbImpl: NyDatabaseImpl;
     private schemaRef: NySchemaInfo;
     private schema: Map<string, string[]>;
 
-    reloadConnection(options: NyConnection) {
+    getNyConnection() {
+        return this.options;
+    }
+
+    async reloadConnection(options: NyConnection) {
         this.options = options;
         let dbImpl = _DBS[options.dialect.toLowerCase()] as NyDatabaseImpl;
         if (!dbImpl) {
             return Promise.reject(`No dialect is found for the name '${options.dialect}'!`)
         }
 
-        return new Promise((resolve, reject) => {
-            dbImpl.reloadConnection(options).then(impl => {
-                this.dbImpl = impl
-                resolve(impl);
-            }).catch(err => {
-                reject(err);
-            })
-        });
+        this.dbImpl = await dbImpl.reloadConnection(options);
+    }
+
+    async close() {
+        if (this.dbImpl) {
+            this.dbImpl.close();
+        }
+        this.options = null;
+        this.dbImpl = null;
+        this.schemaRef = null;
+        if (this.schema) {
+            this.schema.clear();
+        }
     }
 
     async loadSchema() {
@@ -66,7 +78,3 @@ class NyQLDatabaseConnection {
     }
 
 }
-
-const instance : NyQLDatabaseConnection = new NyQLDatabaseConnection();
-
-export default instance;
