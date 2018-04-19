@@ -149,8 +149,6 @@ export class NyQLCompletionItemProvider
       } else if (context.triggerCharacter === '(') {
           const alsItems = this._aliasCompletedItems(document, position);
           resolve(this.withTables().concat(alsItems));
-      } else if (context.triggerCharacter === '$') {
-          resolve(NYQL_GLOB_VARIABLES);
       } else if (context.triggerCharacter === "'" || context.triggerCharacter === '\"' || context.triggerCharacter === '/') {
         return this.getScriptsDirItems(resolve, lineTillCurrentPosition);
       } else {

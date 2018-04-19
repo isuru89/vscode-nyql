@@ -29,5 +29,5 @@ export async function activate(context: vscode.ExtensionContext) {
   //console.log(tblNames);
   
   context.subscriptions.push(vscode.languages.registerCompletionItemProvider("nyql", new NyQLCompletionItemProvider(), 
-    '.', '(', '$', '/', "'", '\"'));
+    '.', '(', '/', "'", '\"'));
 }
