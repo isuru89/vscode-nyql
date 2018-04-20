@@ -57,7 +57,9 @@ export async function removeNyQLConnection() {
   const names = nySettings.getAllNyConnections(true).map(nc => nc.name);
   const picked = await Win.showQuickPick(names);
   if (picked) {
-    nySettings.removeNyConnection(picked);
+    if (nySettings.removeNyConnection(picked)) {
+      Win.showInformationMessage(`Successfully removed connection ${picked}!`);
+    }
   }
 }
 
@@ -69,6 +71,10 @@ export async function createNewNyQLConnection() {
     return;
   }
   const host = await Win.showInputBox({ prompt: 'Host machine name or ip address' });
+  if (!host) {
+    Win.showInformationMessage('You cancelled the NyQL connection creation!');
+    return;
+  }
   const port = await Win.showInputBox({ prompt: 'Port of the ' + dialect + ' service', value: "3306" });
   const user = await Win.showInputBox({ prompt: 'Username for the database' });
   const pw = await Win.showInputBox({ prompt: 'Password for the database. Keep empty if no password is needed.', password: true });

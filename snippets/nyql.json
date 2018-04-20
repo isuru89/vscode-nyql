@@ -371,44 +371,177 @@
     },
 
     "Parameter": {
-        "prefix": "nyqlParameter",
+        "prefix": "PARAM",
         "description": "NyQL single value parameter.",
         "body": "PARAM('${1:paramName}')"
     },
 
     "Parameter List": {
-        "prefix": "nyqlParameter",
+        "prefix": "PARAM_LIST",
         "description": "NyQL list parameter.",
         "body": "PARAM_LIST('${1:paramName}')"
     },
 
     "Parameter Timestamp ISO-8601": {
-        "prefix": "nyqlParameter",
+        "prefix": "PARAM_TIMESTAMP",
         "description": "NyQL timestamp parameter with ISO 8601 format.",
         "body": "PARAM_TIMESTAMP('${1:paramName}')"
     },
 
     "Parameter Timestamp Custom": {
-        "prefix": "nyqlParameter",
+        "prefix": "PARAM_TIMESTAMP",
         "description": "NyQL timestamp parameter with custom format.",
         "body": "PARAM_TIMESTAMP('${1:paramName}', '${2:tsFormat}')"
     },
 
     "Parameter Date": {
-        "prefix": "nyqlParameter",
+        "prefix": "PARAM_DATE",
         "description": "NyQL date parameter with format of 'yyyy-mm-dd'.",
-        "body": "PARAM_Date('${1:paramName}')"
+        "body": "PARAM_DATE('${1:paramName}')"
     },
 
     "Parameter Binary": {
-        "prefix": "nyqlParameter",
+        "prefix": "PARAM_BINARY",
         "description": "NyQL binary value parameter.",
         "body": "PARAM_BINARY('${1:paramName}')"
+    },
+
+    "Equal Operator": {
+        "prefix": "EQ",
+        "description": "NyQL equal operator.",
+        "body": "EQ (${1:tbl}.${2:col}, PARAM('${3:param}'))"
+    },
+
+    "Not-Equal Operator": {
+        "prefix": "NEQ",
+        "description": "NyQL not equal operator.",
+        "body": "NEQ (${1:tbl}.${2:col}, PARAM('${3:param}'))"
+    },
+    "Greater Than Operator": {
+        "prefix": "GT",
+        "description": "NyQL greater than operator.",
+        "body": "GT (${1:tbl}.${2:col}, PARAM('${3:param}'))"
+    },
+    "Greater Than or Equal Operator": {
+        "prefix": "GTE",
+        "description": "NyQL greater than or equal operator.",
+        "body": "GTE (${1:tbl}.${2:col}, PARAM('${3:param}'))"
+    },
+    "Less Than Operator": {
+        "prefix": "LT",
+        "description": "NyQL less than operator.",
+        "body": "LT (${1:tbl}.${2:col}, PARAM('${3:param}'))"
+    },
+    "Less Than or Equal Operator": {
+        "prefix": "LTE",
+        "description": "NyQL less than or equal operator.",
+        "body": "GTE (${1:tbl}.${2:col}, PARAM('${3:param}'))"
+    },
+    "In Operator": {
+        "prefix": "IN",
+        "description": "IN operator.",
+        "body": "IN (${1:tbl}.${2:col}, PARAM_LIST('${3:param}'))"
+    },
+    "Constants In Operator": {
+        "prefix": "IN",
+        "description": "IN with constant list operator.",
+        "body": "IN (${1:tbl}.${2:col}, STR_LIST(['${3:param}', '${4:param2}']))"
+    },
+    "Subquery In Operator": {
+        "prefix": "IN",
+        "description": "IN operator with sub query.",
+        "body": ["IN (${1:tbl}.${2:col}, QUERY {",
+            "\tTARGET(TABLE('${3:tbl2}').alias('${4:als}'))",
+            "\t${0}",
+            "})"]
+    },
+    "Like Operator": {
+        "prefix": "LIKE",
+        "description": "NyQL like operator.",
+        "body": "LIKE (${1:tbl}.${2:col}, PARAM('${3:param}'))"
+    },
+    "Not Like Operator": {
+        "prefix": "NLIKE",
+        "description": "NyQL not-like operator.",
+        "body": "NLIKE (${1:tbl}.${2:col}, PARAM('${3:param}'))"
+    },
+    "Between Operator": {
+        "prefix": "BETWEEN",
+        "description": "NyQL between operator.",
+        "body": "BETWEEN (${1:tbl}.${2:col}, PARAM('${3:param}'), PARAM('${4:param2}'))"
+    },
+    "Not-Between Operator": {
+        "prefix": "NOTBETWEEN",
+        "description": "NyQL not-between operator.",
+        "body": "NOTBETWEEN (${1:tbl}.${2:col}, PARAM('${3:param}'), PARAM('${4:param2}'))"
+    },
+    "Is-Null Operator": {
+        "prefix": "ISNULL",
+        "description": "NyQL ISNULL operator.",
+        "body": "ISNULL (${1:tbl}.${2:col})"
+    },
+    "Not-Null Operator": {
+        "prefix": "NOTNULL",
+        "description": "NyQL Not Null operator.",
+        "body": "NOTNULL (${1:tbl}.${2:col})"
+    },
+    "Exist Operator": {
+        "prefix": "EXISTS",
+        "description": "NyQL Exist operator.",
+        "body": ["EXISTS (QUERY {", "\tTARGET(TABLE('${1:tbl}').alias('${2:als}'))", "\t${0}", "})"]
+    },
+    "Not Exist Operator": {
+        "prefix": "NOTEXISTS",
+        "description": "NyQL Exist operator.",
+        "body": ["NOTEXISTS (QUERY {", "\tTARGET(TABLE('${1:tbl}').alias('${2:als}'))", "\t${0}", "})"]
+    },
+
+    "Where clause": {
+        "prefix": "WHERE",
+        "description": "SQL where clause",
+        "body": ["WHERE {", "\t${0}", "})"]
+    },
+    "Having clause": {
+        "prefix": "HAVING",
+        "description": "SQL having clause with group by",
+        "body": ["HAVING {", "\t${0}", "})"]
+    },
+    "Projection clause": {
+        "prefix": "FETCH",
+        "description": "Projection of columns. Maps to SQL's SELECT clause.",
+        "body": "FETCH (${0})"
+    },
+    "Order-By clause": {
+        "prefix": "ORDER_BY",
+        "description": "SQL order by clause",
+        "body": ["ORDER_BY (${1|ASC,DESC|}(${2:tbl}.${3:col}))"]
+    },
+    "Group-By clause": {
+        "prefix": "GROUP_BY",
+        "description": "SQL order by clause",
+        "body": ["GROUP_BY (${1:tbl}.${2:col1}, ${1:tbl}.${3:col2})"]
+    },
+    "All clause": {
+        "prefix": "ALL",
+        "description": "Connect all inside expressions with AND operator",
+        "body": ["ALL {", "\t${0}", "})"]
+    },
+    "Any clause": {
+        "prefix": "ANY",
+        "description": "Connect all inside expressions with OR operator",
+        "body": ["ANY {", "\t${0}", "})"]
+    },
+    "Join clause": {
+        "prefix": "JOIN",
+        "description": "Join clause to combine with other tables.",
+        "body": ["JOIN {", 
+            "\t${1|INNER_JOIN,LEFT_JOIN,RIGHT_JOIN,FULL_JOIN,CROSS_JOIN|} (TABLE('${2:t2}').alias('${3:ta}')) ON ${4:a2}.${5:c1}, ${3}.${6:c2}", 
+            "}"]
     },
 
     "Join Clause": {
         "prefix": "nyqlJoinClause",
         "description": "NyQL join clause",
-        "body": "${1|INNER_JOIN,LEFT_JOIN,CROSS_JOIN|} (TABLE('${2:t2}').alias('${3:ta}')) ON ${4:a2}.${5:c1}, ${3}.${6:c2}"
+        "body": "${1|INNER_JOIN,LEFT_JOIN,RIGHT_JOIN,FULL_JOIN,CROSS_JOIN|} (TABLE('${2:t2}').alias('${3:ta}')) ON ${4:a2}.${5:c1}, ${3}.${6:c2}"
     }
 }
