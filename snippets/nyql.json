@@ -237,7 +237,7 @@
     },
 
     "Inline Select": {
-        "prefix": "nyqlInlineQuery",
+        "prefix": "QUERY",
         "description": "Simple NyQL inline select query.",
         "body": [
             "QUERY {",
@@ -399,19 +399,16 @@
         "description": "NyQL date parameter with format of 'yyyy-mm-dd'.",
         "body": "PARAM_DATE('${1:paramName}')"
     },
-
     "Parameter Binary": {
         "prefix": "PARAM_BINARY",
         "description": "NyQL binary value parameter.",
         "body": "PARAM_BINARY('${1:paramName}')"
     },
-
     "Equal Operator": {
         "prefix": "EQ",
         "description": "NyQL equal operator.",
         "body": "EQ (${1:tbl}.${2:col}, PARAM('${3:param}'))"
     },
-
     "Not-Equal Operator": {
         "prefix": "NEQ",
         "description": "NyQL not equal operator.",
@@ -495,11 +492,23 @@
         "description": "NyQL Exist operator.",
         "body": ["NOTEXISTS (QUERY {", "\tTARGET(TABLE('${1:tbl}').alias('${2:als}'))", "\t${0}", "})"]
     },
+    "Set Null Operator": {
+        "prefix": "SET_NULL",
+        "description": "Set Null operator. Should only be used inside SET clause.",
+        "body": ["SET_NULL (${1:tbl}.${2:als})"]
+    },
 
     "Where clause": {
         "prefix": "WHERE",
         "description": "SQL where clause",
         "body": ["WHERE {", "\t${0}", "})"]
+    },
+    "Set clause": {
+        "prefix": "SET",
+        "description": "Clause to set or update columns of a table.",
+        "body": ["SET {", 
+            "\tEQ (${1:tbl}.${2:als}, PARAM('${3:param}'))", 
+            "})"]
     },
     "Having clause": {
         "prefix": "HAVING",
