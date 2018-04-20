@@ -14,7 +14,8 @@
     "Languages"
   ],
   "activationEvents": [
-    "*"
+    "*",
+    "onLanguage:nyql"
   ],
   "main": "./out/extension",
   "contributes": {
@@ -120,6 +121,11 @@
         "title": "Reload the Schema of Current Database",
         "command": "nyql.reloadSchema",
         "category": "NyQL" 
+      },
+      {
+        "title": "Sets default connection",
+        "command": "nyql.setDefaultConnection",
+        "category": "NyQL"
       }
     ],
     "grammars": [

@@ -6,32 +6,8 @@ import { isPositionInString } from "./utils";
 import * as fs from 'fs';
 import * as path from 'path';
 
-const nyDb = nySettings.getDb();
-
-const DSL_COMPLETION_ITEMS = [
-    new vscode.CompletionItem('select', vscode.CompletionItemKind.Function),
-    new vscode.CompletionItem('insert', vscode.CompletionItemKind.Function),
-    new vscode.CompletionItem('delete', vscode.CompletionItemKind.Function),
-    new vscode.CompletionItem('update', vscode.CompletionItemKind.Function),
-    new vscode.CompletionItem('insertOrLoad', vscode.CompletionItemKind.Function),
-    new vscode.CompletionItem('upsert', vscode.CompletionItemKind.Function),
-    new vscode.CompletionItem('truncate', vscode.CompletionItemKind.Function),
-    new vscode.CompletionItem('dbFunction', vscode.CompletionItemKind.Function),
-    new vscode.CompletionItem('cte', vscode.CompletionItemKind.Function),
-    new vscode.CompletionItem('bulkInsert', vscode.CompletionItemKind.Function),
-    new vscode.CompletionItem('bulkDelete', vscode.CompletionItemKind.Function),
-    new vscode.CompletionItem('bulkUpdate', vscode.CompletionItemKind.Function),
-    new vscode.CompletionItem('script', vscode.CompletionItemKind.Function),
-    new vscode.CompletionItem('union', vscode.CompletionItemKind.Function),
-    new vscode.CompletionItem('unionDistinct', vscode.CompletionItemKind.Function),
-];
-
-const NYQL_GLOB_VARIABLES_D = [
-  new vscode.CompletionItem('$DSL', vscode.CompletionItemKind.Constant),
-  new vscode.CompletionItem('$SESSION', vscode.CompletionItemKind.Constant),
-  new vscode.CompletionItem('$DB', vscode.CompletionItemKind.Constant),
-  new vscode.CompletionItem('$IMPORT', vscode.CompletionItemKind.Constant),
-];
+import { DSL_COMPLETION_ITEMS, CONSTANT_COMPLETION_ITEMS, TABLE_COMPLETION_ITEMS } from "./lang";
+import { NyQLDatabaseConnection } from "./nyDb";
 
 const _NYQL_ALIAS_SNIPPET = new vscode.CompletionItem('alias', vscode.CompletionItemKind.Method);
 _NYQL_ALIAS_SNIPPET.detail = 'Alias the specified entity.';
@@ -45,6 +21,7 @@ class NyQLTableCompletionItem extends vscode.CompletionItem {
     constructor(label: string) {
         super(label, vscode.CompletionItemKind.Struct);
         this.detail = 'Table';
+        this.insertText = new vscode.SnippetString(`TABLE('${label}')`);
     }
 }
 
@@ -57,6 +34,20 @@ class NyQLColumnCompletionItem extends vscode.CompletionItem {
 
 export class NyQLCompletionItemProvider
   implements vscode.CompletionItemProvider {
+
+
+    private nyDb: NyQLDatabaseConnection;
+    private DEF_TABLE_ITEMS;
+
+    constructor() {
+      this._reloadDb();
+    }
+
+    private _reloadDb() {
+      this.nyDb = nySettings.getDb();
+      this.DEF_TABLE_ITEMS = this.nyDb.getTables().map(t => new vscode.CompletionItem(t, vscode.CompletionItemKind.Struct));
+    }
+
   provideCompletionItems(
     document: vscode.TextDocument,
     position: vscode.Position,
@@ -79,6 +70,12 @@ export class NyQLCompletionItemProvider
     token: vscode.CancellationToken,
     context: vscode.CompletionContext
   ): vscode.ProviderResult<vscode.CompletionItem[] | vscode.CompletionList> {
+
+    if (this.nyDb.isClosed()) {
+      this._reloadDb();
+      if (this.nyDb.isClosed()) return Promise.resolve([]);
+    }
+
     return new Promise<vscode.CompletionItem[]>((resolve, reject) => {
       let filename = document.fileName;
       let lineText = document.lineAt(position.line).text;
@@ -107,10 +104,15 @@ export class NyQLCompletionItemProvider
         if (match) {
             return resolve(this.withDSLContents());
         }
+        match = /\bTABLE\s*\(['\\\"']?\w+['\\\"]?\)\.$/g.exec(lineTillCurrentPosition);
+        if (match) {
+          return resolve(TABLE_COMPLETION_ITEMS);
+        }
+
          match = /\b(\w+)\.$/g.exec(lineTillCurrentPosition);
         if (match) {
           let currTableName = match[1];
-          const colNames: string[] = nyDb.getColumns(currTableName);
+          const colNames: string[] = this.nyDb.getColumns(currTableName);
           if (colNames) {
             return resolve(this.fromColumns(colNames));
           } else {
@@ -119,12 +121,12 @@ export class NyQLCompletionItemProvider
             if (match) {
                 const wTable = match[1];
                 const wColumn = match[2];
-                if (nyDb.validTableColumn(wTable, wColumn)) {
+                if (this.nyDb.validTableColumn(wTable, wColumn)) {
                     return resolve(NYQL_COLUMN_HELPER_ITEMS);
                 } else {
                     // try finding table alias
                     const refTbl = this._findTableNameWithAlias(wTable, document, position);
-                    if (refTbl && nyDb.validTableColumn(refTbl, wColumn)) {
+                    if (refTbl && this.nyDb.validTableColumn(refTbl, wColumn)) {
                         return resolve(NYQL_COLUMN_HELPER_ITEMS);
                     } else {
                         return resolve(NYQL_COLUMN_HELPER_ITEMS);
@@ -154,7 +156,8 @@ export class NyQLCompletionItemProvider
 
   private _miscCompletionItems(document: vscode.TextDocument, position: vscode.Position) {
     return this._aliasCompletedItems(document, position).concat(NYQL_COLUMN_HELPER_ITEMS)
-          .concat(NYQL_GLOB_VARIABLES_D).concat(DSL_COMPLETION_ITEMS);
+          .concat(CONSTANT_COMPLETION_ITEMS).concat(DSL_COMPLETION_ITEMS)
+          .concat(this.DEF_TABLE_ITEMS);
   }
 
   private _aliasCompletedItems(document: vscode.TextDocument, position: vscode.Position) {
@@ -205,11 +208,11 @@ export class NyQLCompletionItemProvider
   }
 
   private withTables() : vscode.CompletionItem[] {
-      return nyDb.getTables().map(t => new NyQLTableCompletionItem(t));
+      return this.nyDb.getTables().map(t => new NyQLTableCompletionItem(t));
   }
 
   private fromTableColumns(tableName: string) : vscode.CompletionItem[] {
-      return this.fromColumns(nyDb.getColumns(tableName));
+      return this.fromColumns(this.nyDb.getColumns(tableName));
   }
 
   private fromColumns(columns: string[]) : vscode.CompletionItem[] {
@@ -224,6 +227,10 @@ export class NyQLCompletionItemProvider
     const ppos = Math.max(lineTill.lastIndexOf('\"'), lineTill.lastIndexOf("'"), 0);
     const prfx = lineTill.substring(0, ppos).trim();
     const ppath = lineTill.substring(ppos+1);
+
+    if (/\bTABLE\s*\(\s*['\"]?/g.exec(prfx)) {
+      return resolve(this.DEF_TABLE_ITEMS);
+    }
     
     if (!/\b\$?(IMPORT|RUN|IMPORT_SAFE)\s*\(\s*/g.exec(prfx)) {
       return;

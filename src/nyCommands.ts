@@ -18,6 +18,7 @@ export async function connectForNyQL() {
     const picked = nySettings.getAllNyConnections().filter(nc => nc.name === pickedName);
     if (picked.length > 0) {
       await nySettings.refreshDb(picked[0]);
+      Win.showInformationMessage(`Successfully connected to ${picked[0].name}.`);
     }
   }
 }
@@ -43,6 +44,15 @@ export async function setRootScriptDir() {
   }
 }
 
+export async function setDefaultConnection() {
+  const names = nySettings.getAllNyConnections(true).map(nc => nc.name);
+  const pickedName = await Win.showQuickPick(names);
+  if (pickedName) {
+    await nySettings.setDefaultConnection(pickedName);
+    Win.showInformationMessage(`Default connection set to ${pickedName}.`);
+  }
+}
+
 export async function removeNyQLConnection() {
   const names = nySettings.getAllNyConnections(true).map(nc => nc.name);
   const picked = await Win.showQuickPick(names);
@@ -54,14 +64,19 @@ export async function removeNyQLConnection() {
 export async function createNewNyQLConnection() {
   let name = await Win.showInputBox({ prompt: 'Enter a name for new NyQL connection' });
   const dialect = await Win.showQuickPick(['MySQL']);
+  if (!dialect) {
+    Win.showInformationMessage('You cancelled the NyQL connection creation!');
+    return;
+  }
   const host = await Win.showInputBox({ prompt: 'Host machine name or ip address' });
   const port = await Win.showInputBox({ prompt: 'Port of the ' + dialect + ' service', value: "3306" });
   const user = await Win.showInputBox({ prompt: 'Username for the database' });
   const pw = await Win.showInputBox({ prompt: 'Password for the database. Keep empty if no password is needed.', password: true });
-  const dbName = await Win.showInputBox({ prompt: 'Schema name to connect for.'});
-
+  
+  let nameFlag: boolean = false;
   if (!name) {
-    name = host + "/" + dbName;
+    name = host + "/";
+    nameFlag = true;
   }
   const nycon: NyConnection = {
     name: name,
@@ -69,10 +84,27 @@ export async function createNewNyQLConnection() {
     port: parseInt(port),
     dialect: dialect,
     username: user,
-    password: pw,
-    databaseName: dbName
+    password: pw
   } as NyConnection;
-  nySettings.addNyConnection(nycon);
+
+  try {
+    const dbNames = await nySettings.getDb().loadDatabaseNames(nycon);
+    const dbName = await Win.showQuickPick(dbNames);
+    nycon.databaseName = dbName;
+    if (nameFlag) nycon.name = nycon.name + dbName;
+    const addedCon = nySettings.addNyConnection(nycon);
+    const reply = await Win.showInformationMessage(`Successfully added new NyQL connection ${addedCon.name}.`, 
+      'Connect Now', 'Later');
+    if (reply === 'Connect Now') {
+      await nySettings.refreshDb(addedCon);
+      Win.showInformationMessage(`Successfully connected to ${addedCon.name}.`);
+    }
+
+  } catch (err) {
+    const e = err as Error;
+    console.error(e);
+    Win.showErrorMessage(`Server connection failed! [${nycon.host}] : ` + e.message);
+  }
 }
 
 function _toAbsDir(v: string) {

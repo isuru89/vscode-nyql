@@ -19,6 +19,14 @@ export class NyQLDatabaseConnection {
         return this.options;
     }
 
+    loadDatabaseNames(con: NyConnection) {
+        let dbImpl = _DBS[con.dialect.toLowerCase()] as NyDatabaseImpl;
+        if (!dbImpl) {
+            return Promise.reject(`No dialect is found for the name '${con.dialect}'!`)
+        }
+        return dbImpl.fetchDatabases(con);
+    }
+
     async reloadConnection(options: NyConnection) {
         this.options = options;
         let dbImpl = _DBS[options.dialect.toLowerCase()] as NyDatabaseImpl;
@@ -27,6 +35,10 @@ export class NyQLDatabaseConnection {
         }
 
         this.dbImpl = await dbImpl.reloadConnection(options);
+    }
+
+    isClosed(): boolean {
+        return this.dbImpl === null;
     }
 
     async close() {

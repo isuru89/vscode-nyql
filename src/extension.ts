@@ -42,7 +42,7 @@ export async function activate(context: vscode.ExtensionContext) {
   //console.log(tblNames);
   
   context.subscriptions.push(vscode.languages.registerCompletionItemProvider("nyql", new NyQLCompletionItemProvider(), 
-    '.', '(', '/', "'", '\"'));
+    '.', '(', '/', "'", '\"', '$'));
 }
 
 
@@ -52,4 +52,5 @@ function registerCommands(ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push(vscode.commands.registerCommand('nyql.removeNyQLConnection', cmds.removeNyQLConnection));
   ctx.subscriptions.push(vscode.commands.registerCommand('nyql.connectForNyQL', cmds.connectForNyQL));
   ctx.subscriptions.push(vscode.commands.registerCommand('nyql.reloadSchema', cmds.reloadSchema));
+  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.setDefaultConnection', cmds.setDefaultConnection));
 }

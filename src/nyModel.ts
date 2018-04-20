@@ -20,9 +20,13 @@ export class NySchemaInfo {
 }
 
 export interface NyDatabaseImpl {
+    fetchDatabases(con: NyConnection) : Promise<string[]>;
+    
     reloadConnection(connectionInfo: NyConnection) : Promise<NyDatabaseImpl>;
 
     loadSchema() : Promise<NySchemaInfo>;
+
+    validateConnection(connectionInfo: NyConnection) : boolean;
 
     close();
 }

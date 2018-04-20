@@ -30,16 +30,29 @@ class NySettings implements vscode.Disposable {
 
     const count = this.getAllNyConnections().length;
     this.statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 10);
+    this.refreshStatusText();
     this.statusBar.tooltip = count > 0 ? 'Select NyQL connection' : 'Create new NyQL connection';
-    this.statusBar.text = count > 0 ? '$(database) <Select NyQL connection>' : '$(database) <Create NyQL connection>';
+    //this.statusBar.text = count > 0 ? '$(database) <Select NyQL connection>' : '$(database) <Create NyQL connection>';
     if (count === 0) {
       this.statusBar.command = 'nyql.createNewNyQLConnection';
     } else {
       this.statusBar.command = 'nyql.connectForNyQL';
     }
-      //statusBar.command = `${Constants.extNamespace}.selectConnection`;
-    // this.statusBar.text = '$(database) NyQL: Connecting...';
     return this.statusBar;
+  }
+
+  private refreshStatusText(text?: string) {
+    if (text) {
+      this.statusBar.text = text;
+    } else {
+      if (this.activeConnection) {
+        this.statusBar.text = '$(database) NyQL: ' + this.activeConnection.name; 
+      } else {
+        const count = this.getAllNyConnections().length;
+        this.statusBar.text = count > 0 ? '$(database) <Select NyQL Connection>' : '$(database) <Create NyQL Connection>';
+        this.statusBar.tooltip = `Select NyQL Connection. (#${count} connections available)`;
+      }
+    }
   }
 
   dispose() {
@@ -63,6 +76,12 @@ class NySettings implements vscode.Disposable {
       }
     }
     return null;
+  }
+
+  async setDefaultConnection(cnName: string) {
+    if (cnName) {
+      await this.configs.update('defaultConnection', cnName); 
+    }
   }
 
   getActiveNyConnection() : NyConnection {
@@ -91,7 +110,7 @@ class NySettings implements vscode.Disposable {
     await this.db.close();
     await this.db.reloadConnection(con);
     await this.db.loadSchema();
-    this.statusBar.text = '$(database) NyQL: ' + con.name
+    this.refreshStatusText();
     this.statusBar.command = 'nyql.connectForNyQL';
     return con;
   }
@@ -137,13 +156,27 @@ class NySettings implements vscode.Disposable {
     return alls;
   }
 
-  addNyConnection(con: NyConnection): boolean {
+  addNyConnection(con: NyConnection): NyConnection {
     let conns = this.configs.get('connections') as Array<NyConnection>;
-    conns.push(con);
-    this.configs.update('connections', conns);
-    return conns.length === 1;
+    if (this._validateCon(con)) {
+      conns.push(con);
+      this.configs.update('connections', conns);
+      this.refreshStatusText();
+    }
+    return con;
   }
 
+  private _validateCon(con: NyConnection): boolean {
+    if (con) {
+      if (!con.name) return false;
+      if (!con.host) return false;
+      if (!con.port) return false;
+      if (!con.dialect) return false;
+      return true;
+    } else {
+      return false;
+    }
+  }
 } 
 
 const instance = new NySettings();

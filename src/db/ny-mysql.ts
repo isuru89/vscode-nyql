@@ -2,6 +2,12 @@ import * as mysql from "mysql2/promise";
 
 import { NyDatabaseImpl, NyConnection, NySchemaInfo, NyDatabase, NyColumn, NyTable } from "../nyModel";
 
+const _RESERVED_TABLES: Set<string> = new Set<string>();
+_RESERVED_TABLES.add('sys');
+_RESERVED_TABLES.add('mysql');
+_RESERVED_TABLES.add('performance_schema');
+_RESERVED_TABLES.add('information_schema');
+
 export class NyMySqlImpl implements NyDatabaseImpl {
 
     private conOptions: mysql.ConnectionOptions;
@@ -14,18 +20,53 @@ export class NyMySqlImpl implements NyDatabaseImpl {
         this.connection = null;
     }
 
+    validateConnection(connectionInfo: NyConnection): boolean {
+        if (connectionInfo) {
+            if (!connectionInfo.host) return false;
+            if (!connectionInfo.username) return false;
+            if (!connectionInfo.password) return false;
+            if (!connectionInfo.databaseName) return false;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    async fetchDatabases(con: NyConnection) : Promise<string[]> {
+        let tmpCon: mysql.Connection;
+        try {
+            tmpCon = await mysql.createConnection(this._convertToMySqlCon(con));
+            let [rows, fields] = await tmpCon.query('SHOW DATABASES;');
+            if (rows instanceof Array) {
+                const rs = rows as Array<mysql.RowDataPacket>;
+                return rs.map(r => r['Database'])
+                    .filter(r => !_RESERVED_TABLES.has(r));
+            } 
+
+        } finally {
+            if (tmpCon) {
+                tmpCon.end();
+            }
+        }
+        return Promise.reject(new Error(`Cannot connect to the server ${con.host}!`));
+    }
+
     async reloadConnection(connectionInfo: NyConnection) {
         this.originalCon = connectionInfo;
-        this.conOptions = {
+        this.conOptions = this._convertToMySqlCon(connectionInfo);
+
+        this.connection = await mysql.createConnection(this.conOptions);
+        return this;
+    }
+
+    private _convertToMySqlCon(connectionInfo: NyConnection) {
+        return {
             host: connectionInfo.host,
             port: connectionInfo.port || 3306,
             user: connectionInfo.username,
             password: connectionInfo.password,
             database: connectionInfo.databaseName
         } as mysql.ConnectionOptions;
-
-        this.connection = await mysql.createConnection(this.conOptions);
-        return this;
     }
 
     async loadSchema(): Promise<NySchemaInfo> {
