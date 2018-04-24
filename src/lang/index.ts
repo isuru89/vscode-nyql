@@ -2,6 +2,10 @@ import { CompletionItem, CompletionItemKind, SnippetString } from "vscode";
 
 import { DSL_FUNCTIONS } from "./func.dsl";
 import { DSL_CONSTANTS } from "./vars.dsl";
+import { MATH_FUNCTIONS } from "./func.math";
+import { STR_FUNCTIONS } from "./func.str";
+import { TIME_FUNCTIONS } from "./func.time";
+import { MISC_FUNCTIONS } from "./func.misc";
 
 const tbl = [{
   name: 'COLUMN',
@@ -20,6 +24,15 @@ const tbl = [{
   description: 'Fetch all columns of this table',
   insertText: 'ALL()'
 }];
+
+export const FUNCTIONS = MATH_FUNCTIONS.concat(STR_FUNCTIONS).concat(TIME_FUNCTIONS).concat(MISC_FUNCTIONS).map(it => {
+  let ci = new CompletionItem(it.name, CompletionItemKind.Function);
+  ci.detail = it.description;
+  if (it.snippet) {
+    ci.insertText = new SnippetString(it.snippet);
+  }
+  return ci;
+});
 
 export const DSL_COMPLETION_ITEMS = DSL_FUNCTIONS.map(it => {
   let ci = new CompletionItem(it.name, CompletionItemKind.Function);

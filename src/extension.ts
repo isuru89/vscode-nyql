@@ -8,6 +8,7 @@ import * as vscode from "vscode";
 
 import { NyQLCompletionItemProvider } from "./nySuggest";
 
+import * as fs from "fs";
 import * as cmds from "./nyCommands";
 import { NyConnection } from "./nyModel";
 import nySettings from "./nySettings";
@@ -40,7 +41,7 @@ export async function activate(context: vscode.ExtensionContext) {
   // await nyDb.loadSchema();
   // statusBar.text = '$(database) NyQL: ' + nyConnectionInfo.databaseName;
   //console.log(tblNames);
-  
+
   context.subscriptions.push(vscode.languages.registerCompletionItemProvider("nyql", new NyQLCompletionItemProvider(), 
     '.', '(', '/', "'", '\"', '$'));
 }

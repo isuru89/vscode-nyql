@@ -6,7 +6,7 @@ import { isPositionInString } from "./utils";
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { DSL_COMPLETION_ITEMS, CONSTANT_COMPLETION_ITEMS, TABLE_COMPLETION_ITEMS } from "./lang";
+import { DSL_COMPLETION_ITEMS, CONSTANT_COMPLETION_ITEMS, TABLE_COMPLETION_ITEMS, FUNCTIONS } from "./lang";
 import { NyQLDatabaseConnection } from "./nyDb";
 
 const _NYQL_ALIAS_SNIPPET = new vscode.CompletionItem('alias', vscode.CompletionItemKind.Method);
@@ -157,6 +157,7 @@ export class NyQLCompletionItemProvider
   private _miscCompletionItems(document: vscode.TextDocument, position: vscode.Position) {
     return this._aliasCompletedItems(document, position).concat(NYQL_COLUMN_HELPER_ITEMS)
           .concat(CONSTANT_COMPLETION_ITEMS).concat(DSL_COMPLETION_ITEMS)
+          .concat(FUNCTIONS)
           .concat(this.DEF_TABLE_ITEMS);
   }
 
