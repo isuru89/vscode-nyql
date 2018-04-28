@@ -14,6 +14,8 @@ import { NyConnection } from "./nyModel";
 import nySettings from "./nySettings";
 import { constants } from "fs";
 
+import nyClient from "./client/nyClient";
+
 const nyConnectionInfo: NyConnection  = {
   dialect: 'mysql',
   host: 'cmddtennakoon',
@@ -37,13 +39,24 @@ export async function activate(context: vscode.ExtensionContext) {
   if (nycon) {
     await nySettings.refreshDb(nycon);
   }
-  // const _ = await nyDb.reloadConnection(nyConnectionInfo);
-  // await nyDb.loadSchema();
-  // statusBar.text = '$(database) NyQL: ' + nyConnectionInfo.databaseName;
-  //console.log(tblNames);
 
   context.subscriptions.push(vscode.languages.registerCompletionItemProvider("nyql", new NyQLCompletionItemProvider(), 
     '.', '(', '/', "'", '\"', '$'));
+
+    const preview = nySettings.getPreviewHtml()
+  vscode.workspace.registerTextDocumentContentProvider(preview.uri.scheme, preview);
+
+  vscode.window.onDidChangeActiveTextEditor((e: vscode.TextEditor) => {
+    if (e) preview.update(e.document);
+  })
+
+  nyClient.start();
+}
+
+export async function deactivate() {
+  console.log('Deactivating...');
+  await nyClient.close();
+  return Promise.resolve();
 }
 
 
@@ -54,4 +67,5 @@ function registerCommands(ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push(vscode.commands.registerCommand('nyql.connectForNyQL', cmds.connectForNyQL));
   ctx.subscriptions.push(vscode.commands.registerCommand('nyql.reloadSchema', cmds.reloadSchema));
   ctx.subscriptions.push(vscode.commands.registerCommand('nyql.setDefaultConnection', cmds.setDefaultConnection));
+  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.parseScript', cmds.parseScript));
 }

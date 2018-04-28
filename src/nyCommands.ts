@@ -5,7 +5,39 @@ import * as path from "path";
 const Win = vscode.window;
 
 import nySettings from "./nySettings";
+import nyClient from "./client/nyClient";
 import { NyConnection } from "./nyModel";
+
+async function openHtml(htmlUri: vscode.Uri, outputName: string) {
+  let viewColumn: vscode.ViewColumn = vscode.ViewColumn.Three;
+  if (vscode.window.activeTextEditor && vscode.window.activeTextEditor.viewColumn) {
+    //viewColumn = vscode.window.activeTextEditor.viewColumn;
+  }
+  await vscode.commands.executeCommand('vscode.previewHtml', htmlUri, viewColumn, outputName);
+}
+
+export async function parseScript() {
+  openHtml(nySettings.getPreviewHtml().uri.with({ fragment: '/parse' }), '/parsed result');
+}
+
+export async function getParsedResult() {
+  const activeDocFullPath = Win.activeTextEditor.document.uri.fsPath;
+  const baseScriptsDir = nySettings.getScriptsDir();
+  let relPath = path.relative(baseScriptsDir, activeDocFullPath);
+  const pos = relPath.lastIndexOf('.');
+  if (pos > 0) {
+    relPath = relPath.substr(0, pos).toLowerCase();
+  }
+  console.log(relPath)
+
+  const result = await nyClient.sendMessage({
+    cmd: 'parse',
+    name: nySettings.getActiveNyConnection().name,
+    path: relPath
+  });
+  console.log(result);
+  return result;
+}
 
 export async function reloadSchema() {
   await nySettings.reloadSchema();

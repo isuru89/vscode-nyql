@@ -1,6 +1,7 @@
 import { NyTable, NyColumn, NyConnection, NyDatabase, NyDatabaseImpl, NySchemaInfo } from "./nyModel";
 import { NyMySqlImpl } from "./db/ny-mysql";
 import { Disposable } from "vscode";
+import nyClient from "./client/nyClient";
 
 const _DBS = {
     "mysql": new NyMySqlImpl()
@@ -42,6 +43,15 @@ export class NyQLDatabaseConnection {
     }
 
     async close() {
+        try {
+            await nyClient.sendMessage({
+                cmd: 'remove',
+                name: this.options.name
+            });
+        } catch (err) {
+            console.log("Error closing nyql connection!");
+        }
+
         if (this.dbImpl) {
             this.dbImpl.close();
         }

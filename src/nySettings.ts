@@ -5,6 +5,12 @@ import * as path from "path";
 import { NyConnection } from "./nyModel";
 import {NyQLDatabaseConnection} from "./nyDb";
 
+import nyClient from "./client/nyClient";
+import { NyQLViewHtml } from "./providers/parsedQueryView";
+
+
+const preview = new NyQLViewHtml(vscode.Uri.parse(`nyql://engine`));
+
 class NySettings implements vscode.Disposable {
 
   private configs: vscode.WorkspaceConfiguration;
@@ -21,6 +27,10 @@ class NySettings implements vscode.Disposable {
       this.scriptsDir = vscode.workspace.rootPath;
     }
     this.db = new NyQLDatabaseConnection();
+  }
+
+  getPreviewHtml(): NyQLViewHtml {
+    return preview;
   }
 
   getNyStatusBar(): vscode.StatusBarItem {
@@ -110,6 +120,11 @@ class NySettings implements vscode.Disposable {
     await this.db.close();
     await this.db.reloadConnection(con);
     await this.db.loadSchema();
+    await nyClient.sendMessage({
+      cmd: 'con',
+      scriptDir: this.scriptsDir,
+      ...con
+    });
     this.refreshStatusText();
     this.statusBar.command = 'nyql.connectForNyQL';
     return con;
