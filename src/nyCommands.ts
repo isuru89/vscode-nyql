@@ -9,8 +9,8 @@ import nyClient from "./client/nyClient";
 import { filenameWithouExt } from "./utils";
 import { NyConnection } from "./nyModel";
 
-function openHtml(htmlUri: vscode.Uri, outputName: string) {
-  let viewColumn: vscode.ViewColumn = vscode.ViewColumn.Two;
+function openHtml(htmlUri: vscode.Uri, outputName: string, viewColumn: vscode.ViewColumn = vscode.ViewColumn.Two) {
+  //let viewColumn: vscode.ViewColumn = vscode.ViewColumn.Two;
   //if (vscode.window.activeTextEditor && vscode.window.activeTextEditor.viewColumn) {
     //viewColumn = vscode.window.activeTextEditor.viewColumn;
     //console.log(vscode.window.activeTextEditor.document.fileName);
@@ -19,10 +19,16 @@ function openHtml(htmlUri: vscode.Uri, outputName: string) {
   }, err => console.error(err))
 }
 
+export async function executeScript() {
+  if (Win.activeTextEditor) {
+    nySettings.previewHtml.update(nySettings.previewUri.with({ fragment: '/execute' }));
+    openHtml(nySettings.previewUri.with({ fragment: '/execute' }), '/execute', vscode.ViewColumn.Three);
+  }
+}
+
 export async function parseScript() {
   if (Win.activeTextEditor) {
-    const relPath = vscode.workspace.asRelativePath(Win.activeTextEditor.document.fileName);
-    nySettings.previewHtml.update(Win.activeTextEditor.document.uri);
+    //nySettings.previewHtml.update(Win.activeTextEditor.document.uri);
     openHtml(nySettings.previewUri, '/query' );
   }
 }

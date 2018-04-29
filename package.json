@@ -104,6 +104,11 @@
         "category": "NyQL"
       },
       {
+        "title": "Execute NyQL Script",
+        "command": "nyql.executeScript",
+        "category": "NyQL"
+      },
+      {
         "title": "Set NyQL Root Scripts Directory",
         "command": "nyql.setRootScriptDir",
         "category": "NyQL"

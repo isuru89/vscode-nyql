@@ -47,10 +47,14 @@ export async function activate(context: vscode.ExtensionContext) {
   let registration = vscode.workspace.registerTextDocumentContentProvider('nyql', preview);
 
   vscode.workspace.onDidSaveTextDocument((e: vscode.TextDocument) => {
-    if (e) preview.update(nySettings.previewUri);
+    if (e) {
+      console.log('on save triggered ', e.fileName)
+      preview.update(nySettings.previewUri);
+    }
   })
   vscode.window.onDidChangeActiveTextEditor((e: vscode.TextEditor) => {
     if (e && e.document && e.document.languageId == 'nyql') {
+      console.log('nyql activated!')
       preview.update(nySettings.previewUri);
     }
   })
@@ -75,4 +79,5 @@ function registerCommands(ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push(vscode.commands.registerCommand('nyql.reloadSchema', cmds.reloadSchema));
   ctx.subscriptions.push(vscode.commands.registerCommand('nyql.setDefaultConnection', cmds.setDefaultConnection));
   ctx.subscriptions.push(vscode.commands.registerCommand('nyql.parseScript', cmds.parseScript));
+  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.executeScript', cmds.executeScript));
 }

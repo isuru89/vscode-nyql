@@ -8,12 +8,11 @@ import {NyQLDatabaseConnection} from "./nyDb";
 import nyClient from "./client/nyClient";
 import { NyQLViewHtml } from "./providers/parsedQueryView";
 
-
 const preview = new NyQLViewHtml();
 
 class NySettings implements vscode.Disposable {
 
-  public previewUri = vscode.Uri.parse('nyql://isuru/parse');
+  public previewUri = vscode.Uri.parse('nyql://isuru');
   public previewHtml: NyQLViewHtml = new NyQLViewHtml();
   private configs: vscode.WorkspaceConfiguration;
   private scriptsDir: string;

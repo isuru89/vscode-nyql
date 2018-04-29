@@ -14,6 +14,17 @@ export class NyQLViewHtml implements vscode.TextDocumentContentProvider {
   }
 
   async provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken) {
+    if (uri.fragment === '/execute') {
+      return `<!DOCTYPE html>
+      <html>
+      <head></head>
+      <body>
+        <div>${vscode.window.activeTextEditor.document.fileName}</div>
+      </body>
+      </html>
+      `
+    }
+
     try {
       if (vscode.window.activeTextEditor) {
         // console.log('calling ', vscode.window.activeTextEditor.document.languageId)
