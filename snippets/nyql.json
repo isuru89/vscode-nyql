@@ -501,7 +501,7 @@
     "Where clause": {
         "prefix": "WHERE",
         "description": "SQL where clause",
-        "body": ["WHERE {", "\t${0}", "})"]
+        "body": ["WHERE {", "\t${0}", "}"]
     },
     "Set clause": {
         "prefix": "SET",

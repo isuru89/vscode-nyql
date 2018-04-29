@@ -67,6 +67,7 @@ export async function activate(context: vscode.ExtensionContext) {
 export async function deactivate() {
   console.log('Deactivating...');
   await nyClient.close();
+  nySettings.dispose();
   return Promise.resolve();
 }
 

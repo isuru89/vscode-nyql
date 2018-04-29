@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { getParsedResult, parseScript } from "../nyCommands";
+import { getParsedResult, parseScript, getExecutedResult } from "../nyCommands";
 
 export class NyQLViewHtml implements vscode.TextDocumentContentProvider {
   private _onDidChange = new vscode.EventEmitter<vscode.Uri>();
@@ -13,29 +13,48 @@ export class NyQLViewHtml implements vscode.TextDocumentContentProvider {
   }
 
   async provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken) {
-    if (uri.fragment === '/execute') {
-      return this.renderExecuteResult();
-    }
-
-    try {
-      if (vscode.window.activeTextEditor) {
-        const qr = await getParsedResult();
-        return this.renderParsedView(qr.query);
+    if (vscode.window.activeTextEditor) {
+      if (uri.fragment === '/execute') {
+        return this.renderExecuteResult();
       }
-    } catch (err) {
-      return this.renderError(err);
+
+      try {
+          const qr = await getParsedResult();
+          return this.renderParsedView(qr.query);
+      } catch (err) {
+        return this.renderError(err);
+      }
     }
   }
 
-  private renderExecuteResult() {
+  private async renderExecuteResult() {
+    try {
+    const result = await getExecutedResult();
+    const cols = result.columns as string[];
+    const recs = result.result as any[];
     return `<!DOCTYPE html>
-    <html>
-    <head></head>
-    <body>
-      <div>${vscode.window.activeTextEditor.document.fileName}</div>
-    </body>
-    </html>
-    `;
+      <html>
+      <head></head>
+      <body>
+        <div>
+          <div>#${recs.length} record(s) returned.</div>
+          <table border=1>
+            <tr>
+            ${cols.map(c => "<td><b>"+ c +"</b></td>")}
+            </tr>
+            ${recs.map(r => {
+              return '<tr>'
+                + cols.map(c => '<td>' + r[c] + '</td>')
+                + '</tr>'
+            })}
+          </table>
+        </div>
+      </body>
+      </html>
+      `;
+    } catch (err) {
+      return this.renderError(err);
+    }
   }
 
   private renderError(err) {
