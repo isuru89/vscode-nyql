@@ -6,53 +6,116 @@ const Win = vscode.window;
 
 import nySettings from "./nySettings";
 import nyClient from "./client/nyClient";
-import { filenameWithouExt } from "./utils";
+import { filenameWithouExt, fetchAllReqParams, readFileAsJson, createDataFile,
+  getMissingParameters, createSnippetParams } from "./utils";
 import { NyConnection } from "./nyModel";
 
-function openHtml(htmlUri: vscode.Uri, outputName: string, viewColumn: vscode.ViewColumn = vscode.ViewColumn.Two) {
+async function openHtml(htmlUri: vscode.Uri, outputName: string, viewColumn: vscode.ViewColumn = vscode.ViewColumn.Two) {
   //let viewColumn: vscode.ViewColumn = vscode.ViewColumn.Two;
   //if (vscode.window.activeTextEditor && vscode.window.activeTextEditor.viewColumn) {
     //viewColumn = vscode.window.activeTextEditor.viewColumn;
     //console.log(vscode.window.activeTextEditor.document.fileName);
   //}
-  vscode.commands.executeCommand('vscode.previewHtml', htmlUri, viewColumn, outputName).then(success => {
-  }, err => console.error(err))
+  await vscode.commands.executeCommand('vscode.previewHtml', htmlUri, viewColumn, outputName)
 }
 
 export async function executeScript() {
-  if (Win.activeTextEditor) {
+  if (Win.activeTextEditor && Win.activeTextEditor.document.languageId === 'nyql') {
+    const parsedResult = await getParsedResult();
+    const reqParams = fetchAllReqParams(parsedResult);
+
+    if (reqParams && reqParams.length > 0) {
+      // parameters required...
+      const filename = createDataFile(Win.activeTextEditor.document.fileName + '.json');
+    
+      // read json file
+      let jsonData = readFileAsJson(filename, null);
+      if (!jsonData) {
+        // no data
+        const doc = await vscode.workspace.openTextDocument(filename);
+        const editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.Two, true);
+        vscode.window.showWarningMessage('You need some parameters to run this query!');
+        editor.insertSnippet(createSnippetParams({}, reqParams.map(r => r.name)));
+        return;
+      } else {
+        // check json data is enough to run query
+        const missed: string[] = getMissingParameters(jsonData, reqParams);
+        if (missed.length > 0) {
+          // prompt user to insert missing params
+
+          const doc = await vscode.workspace.openTextDocument(filename);
+          const editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.Two, true);
+          const txt = editor.document.getText();
+          const clsPos = txt.lastIndexOf('}');
+          if (clsPos > 0) {
+            const snp = createSnippetParams(jsonData, missed, true);
+            editor.insertSnippet(snp, doc.positionAt(clsPos));
+          } else {
+            const snp = createSnippetParams(jsonData, missed);
+            editor.insertSnippet(snp, doc.positionAt(0));
+          }
+          return;
+        } 
+      }
+
+    }
+
+    // now we are ok to run query
     nySettings.previewHtml.update(nySettings.previewUri.with({ fragment: '/execute' }));
-    openHtml(nySettings.previewUri.with({ fragment: '/execute' }), '/execute', vscode.ViewColumn.Three);
+    await openHtml(nySettings.previewUri.with({ fragment: '/execute' }), '/execute', vscode.ViewColumn.Three);
   }
 }
 
 export async function parseScript() {
   if (Win.activeTextEditor) {
-    //nySettings.previewHtml.update(Win.activeTextEditor.document.uri);
     openHtml(nySettings.previewUri, '/query' );
+  }
+}
+
+export async function getExecutedResult() {
+  if (Win.activeTextEditor) {
+    const activeDocFullPath = Win.activeTextEditor.document.fileName;
+    const baseScriptsDir = nySettings.getScriptsDir();
+    let relPath = path.relative(baseScriptsDir, activeDocFullPath);
+    const pos = relPath.lastIndexOf('.');
+    if (pos > 0) {
+      relPath = relPath.substr(0, pos).toLowerCase();
+    }
+    const data = readFileAsJson(activeDocFullPath + '.json');
+
+    const result = await nyClient.sendMessage({
+      cmd: 'execute',
+      name: nySettings.getActiveNyConnection().name,
+      path: relPath,
+      data: data
+    });
+    console.log(result);
+    return result;
+  } else {
+    return null;
   }
 }
 
 export async function getParsedResult() {
   if (Win.activeTextEditor) {
-  const activeDocFullPath = Win.activeTextEditor.document.uri.fsPath;
-  const baseScriptsDir = nySettings.getScriptsDir();
-  let relPath = path.relative(baseScriptsDir, activeDocFullPath);
-  const pos = relPath.lastIndexOf('.');
-  if (pos > 0) {
-    relPath = relPath.substr(0, pos).toLowerCase();
-  }
+    const activeDocFullPath = Win.activeTextEditor.document.fileName;
+    const baseScriptsDir = nySettings.getScriptsDir();
+    let relPath = path.relative(baseScriptsDir, activeDocFullPath);
+    const pos = relPath.lastIndexOf('.');
+    if (pos > 0) {
+      relPath = relPath.substr(0, pos).toLowerCase();
+    }
 
-  const result = await nyClient.sendMessage({
-    cmd: 'parse',
-    name: nySettings.getActiveNyConnection().name,
-    path: relPath
-  });
-  console.log(result);
-  return result;
-} else {
-  return 'No active text editor selected!'
-}
+    const result = await nyClient.sendMessage({
+      cmd: 'parse',
+      name: nySettings.getActiveNyConnection().name,
+      path: relPath
+    });
+    console.log(result);
+    return result;
+  } else {
+    return null;
+  }
 }
 
 export async function reloadSchema() {

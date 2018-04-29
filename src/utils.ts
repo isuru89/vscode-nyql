@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import * as p from "path";
+import * as fs from "fs";
 
 export function isPositionInString(document: vscode.TextDocument, position: vscode.Position): boolean {
 	let lineText = document.lineAt(position.line).text;
@@ -21,4 +22,76 @@ export function filenameWithouExt(path: string): string {
 	} else {
 		return bsname;
 	}
+}
+
+export function createDataFile(file) {
+	if (!fs.existsSync(file)) {
+		fs.openSync(file, 'w');
+	}
+	return file;
+}
+
+export function fetchAllReqParams(parsedQuery): any[] {
+	if (!parsedQuery) {
+		return null;
+	} else if (parsedQuery.params && parsedQuery.params.length > 0) {
+		return parsedQuery.params as any[];
+	} else {
+		return [];
+	}
+}
+
+export function createSnippetParams(json, missedParams: string[] = [], toAppend: boolean = false): vscode.SnippetString {
+	if (toAppend === true) {
+		let str = '';
+		if (Object.keys(json).length > 0) {
+			str = ',\n' 
+		}
+		str = str + '\t';
+		if (missedParams && missedParams.length > 0) {
+			for (let index = 0; index < missedParams.length; index++) {
+				const element = missedParams[index];
+				if (index > 0) str = str + ',\n'
+				str = str + `"${element}": ` + '\"${' + (index+1) + ':value}\"';	// @TODO append values as its type
+			}
+		}
+		return new vscode.SnippetString(str + '\n');
+	} else {
+		if (missedParams && missedParams.length > 0) {
+			for (let index = 0; index < missedParams.length; index++) {
+				const element = missedParams[index];
+				json[element] = '${' + (index+1) + ':value}';	// @TODO append values as its type
+			}
+		}
+		return new vscode.SnippetString(JSON.stringify(json, null, 2));
+	}
+}
+
+export function readFileAsJson(file, def={}, whenEmpty={}) {
+	try {
+		if (fs.existsSync(file)) {
+			const jsonstr = fs.readFileSync(file).toString();
+			if (jsonstr && jsonstr.trim().length > 0) {
+				const obj = JSON.parse(jsonstr);
+				if (Object.keys(obj).length === 0 && obj.constructor === Object) {
+					return whenEmpty;
+				} else {
+					return obj;
+				}
+			}
+		}
+	} catch (err) {
+	}
+	return def;
+}
+
+export function getMissingParameters(json, params: any[]): string[] {
+	let missedParams = [];
+	for (let index = 0; index < params.length; index++) {
+		const pName = params[index].name;
+		if (!json[pName]) {
+			missedParams.push(pName);
+		}
+	}
+	return missedParams;
 }

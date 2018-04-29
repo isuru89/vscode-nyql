@@ -9,34 +9,33 @@ export class NyQLViewHtml implements vscode.TextDocumentContentProvider {
   }
 
   async update(uri: vscode.Uri) {
-      console.log('updating...');
       this._onDidChange.fire(uri);
   }
 
   async provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken) {
     if (uri.fragment === '/execute') {
-      return `<!DOCTYPE html>
-      <html>
-      <head></head>
-      <body>
-        <div>${vscode.window.activeTextEditor.document.fileName}</div>
-      </body>
-      </html>
-      `
+      return this.renderExecuteResult();
     }
 
     try {
       if (vscode.window.activeTextEditor) {
-        // console.log('calling ', vscode.window.activeTextEditor.document.languageId)
         const qr = await getParsedResult();
         return this.renderParsedView(qr.query);
-        //this.html.set(uri.fragment, this.renderParsedView(qr.query));
       }
     } catch (err) {
-      //this.html.set(uri.fragment, this.renderError(err));
       return this.renderError(err);
     }
-    //return this.html.get(uri.fragment);
+  }
+
+  private renderExecuteResult() {
+    return `<!DOCTYPE html>
+    <html>
+    <head></head>
+    <body>
+      <div>${vscode.window.activeTextEditor.document.fileName}</div>
+    </body>
+    </html>
+    `;
   }
 
   private renderError(err) {
