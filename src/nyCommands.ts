@@ -6,21 +6,29 @@ const Win = vscode.window;
 
 import nySettings from "./nySettings";
 import nyClient from "./client/nyClient";
+import { filenameWithouExt } from "./utils";
 import { NyConnection } from "./nyModel";
 
-async function openHtml(htmlUri: vscode.Uri, outputName: string) {
-  let viewColumn: vscode.ViewColumn = vscode.ViewColumn.Three;
-  if (vscode.window.activeTextEditor && vscode.window.activeTextEditor.viewColumn) {
+function openHtml(htmlUri: vscode.Uri, outputName: string) {
+  let viewColumn: vscode.ViewColumn = vscode.ViewColumn.Two;
+  //if (vscode.window.activeTextEditor && vscode.window.activeTextEditor.viewColumn) {
     //viewColumn = vscode.window.activeTextEditor.viewColumn;
-  }
-  await vscode.commands.executeCommand('vscode.previewHtml', htmlUri, viewColumn, outputName);
+    //console.log(vscode.window.activeTextEditor.document.fileName);
+  //}
+  vscode.commands.executeCommand('vscode.previewHtml', htmlUri, viewColumn, outputName).then(success => {
+  }, err => console.error(err))
 }
 
 export async function parseScript() {
-  openHtml(nySettings.getPreviewHtml().uri.with({ fragment: '/parse' }), '/parsed result');
+  if (Win.activeTextEditor) {
+    const relPath = vscode.workspace.asRelativePath(Win.activeTextEditor.document.fileName);
+    nySettings.previewHtml.update(Win.activeTextEditor.document.uri);
+    openHtml(nySettings.previewUri, '/query' );
+  }
 }
 
 export async function getParsedResult() {
+  if (Win.activeTextEditor) {
   const activeDocFullPath = Win.activeTextEditor.document.uri.fsPath;
   const baseScriptsDir = nySettings.getScriptsDir();
   let relPath = path.relative(baseScriptsDir, activeDocFullPath);
@@ -28,7 +36,6 @@ export async function getParsedResult() {
   if (pos > 0) {
     relPath = relPath.substr(0, pos).toLowerCase();
   }
-  console.log(relPath)
 
   const result = await nyClient.sendMessage({
     cmd: 'parse',
@@ -37,6 +44,9 @@ export async function getParsedResult() {
   });
   console.log(result);
   return result;
+} else {
+  return 'No active text editor selected!'
+}
 }
 
 export async function reloadSchema() {

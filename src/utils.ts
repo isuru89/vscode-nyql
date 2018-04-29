@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as p from "path";
 
 export function isPositionInString(document: vscode.TextDocument, position: vscode.Position): boolean {
 	let lineText = document.lineAt(position.line).text;
@@ -10,4 +11,14 @@ export function isPositionInString(document: vscode.TextDocument, position: vsco
 
 	doubleQuotesCnt -= escapedDoubleQuotesCnt;
 	return doubleQuotesCnt % 2 === 1;
+}
+
+export function filenameWithouExt(path: string): string {
+  const bsname = p.basename(path)
+	const pos = bsname.lastIndexOf('.');
+	if (pos > 0) {
+		return bsname.substr(0, pos);
+	} else {
+		return bsname;
+	}
 }

@@ -43,12 +43,19 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.languages.registerCompletionItemProvider("nyql", new NyQLCompletionItemProvider(), 
     '.', '(', '/', "'", '\"', '$'));
 
-    const preview = nySettings.getPreviewHtml()
-  vscode.workspace.registerTextDocumentContentProvider(preview.uri.scheme, preview);
+  const preview = nySettings.previewHtml;
+  let registration = vscode.workspace.registerTextDocumentContentProvider('nyql', preview);
 
-  vscode.window.onDidChangeActiveTextEditor((e: vscode.TextEditor) => {
-    if (e) preview.update(e.document);
+  vscode.workspace.onDidSaveTextDocument((e: vscode.TextDocument) => {
+    if (e) preview.update(nySettings.previewUri);
   })
+  vscode.window.onDidChangeActiveTextEditor((e: vscode.TextEditor) => {
+    if (e && e.document && e.document.languageId == 'nyql') {
+      preview.update(nySettings.previewUri);
+    }
+  })
+
+  context.subscriptions.push(registration);
 
   nyClient.start();
 }
