@@ -81,4 +81,5 @@ function registerCommands(ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push(vscode.commands.registerCommand('nyql.setDefaultConnection', cmds.setDefaultConnection));
   ctx.subscriptions.push(vscode.commands.registerCommand('nyql.parseScript', cmds.parseScript));
   ctx.subscriptions.push(vscode.commands.registerCommand('nyql.executeScript', cmds.executeScript));
+  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.convertFromSql', cmds.convertSqlToNyQL));
 }

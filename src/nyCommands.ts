@@ -7,8 +7,45 @@ const Win = vscode.window;
 import nySettings from "./nySettings";
 import nyClient from "./client/nyClient";
 import { filenameWithouExt, fetchAllReqParams, readFileAsJson, createDataFile,
-  getMissingParameters, createSnippetParams } from "./utils";
+  getMissingParameters, createSnippetParams, replaceText } from "./utils";
 import { NyConnection } from "./nyModel";
+
+export async function convertSqlToNyQL() {
+  if (Win.activeTextEditor) {
+    const editor = Win.activeTextEditor;
+    const doc = editor.document;
+    let payload = {
+      cmd: 'convert'
+    };
+
+    let range = null;
+      // unsaved document
+      if (editor.selection) {
+        range = new vscode.Range(editor.selection.start, editor.selection.end);
+        payload['content'] = doc.getText(range);
+      } else {
+        if (doc.isUntitled) {
+          payload['content'] = doc.getText();
+        } else if (!doc.isDirty) {
+          payload['file'] = doc.fileName;
+        } else {
+          Win.showWarningMessage('You need to select the query or save the document before converting to NyQL!')
+        }
+      }
+
+    const result = await nyClient.sendMessage(payload);
+    if (result.error) {
+      Win.showErrorMessage('Failed to convert sql! [Error: ' + result.errorMessage + "]");
+    } else if (result.warn) {
+      Win.showErrorMessage('Unknown sql statement! Given query cannot be converted to nyql automatically!');
+    } else {
+      let dsl = (result.dsl as string).trim();
+      if (dsl.startsWith('$DSL')) dsl = '\\' + dsl;
+      replaceText(editor, dsl, range);
+    }
+  }
+
+}
 
 async function openHtml(htmlUri: vscode.Uri, outputName: string, viewColumn: vscode.ViewColumn = vscode.ViewColumn.Two) {
   //let viewColumn: vscode.ViewColumn = vscode.ViewColumn.Two;
@@ -19,6 +56,8 @@ async function openHtml(htmlUri: vscode.Uri, outputName: string, viewColumn: vsc
   await vscode.commands.executeCommand('vscode.previewHtml', htmlUri, viewColumn, outputName)
 }
 
+// @TODO parameterize this so query can execute when json file is activated
+// @TODO check file save status and warn user
 export async function executeScript() {
   if (Win.activeTextEditor && Win.activeTextEditor.document.languageId === 'nyql') {
     const parsedResult = await getParsedResult();
@@ -35,7 +74,7 @@ export async function executeScript() {
         const doc = await vscode.workspace.openTextDocument(filename);
         const editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.Two, true);
         vscode.window.showWarningMessage('You need some parameters to run this query!');
-        editor.insertSnippet(createSnippetParams({}, reqParams.map(r => r.name)));
+        replaceText(editor, createSnippetParams({}, reqParams.map(r => r.name)));
         return;
       } else {
         // check json data is enough to run query
@@ -45,15 +84,8 @@ export async function executeScript() {
 
           const doc = await vscode.workspace.openTextDocument(filename);
           const editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.Two, true);
-          const txt = editor.document.getText();
-          const clsPos = txt.lastIndexOf('}');
-          if (clsPos > 0) {
-            const snp = createSnippetParams(jsonData, missed, true);
-            editor.insertSnippet(snp, doc.positionAt(clsPos));
-          } else {
-            const snp = createSnippetParams(jsonData, missed);
-            editor.insertSnippet(snp, doc.positionAt(0));
-          }
+          const snp = createSnippetParams(jsonData, missed);
+          replaceText(editor, snp);
           return;
         } 
       }

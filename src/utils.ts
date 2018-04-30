@@ -31,6 +31,19 @@ export function createDataFile(file) {
 	return file;
 }
 
+export function replaceText(editor: vscode.TextEditor, text, range?: vscode.Range) {
+	let rng = range;
+	const doc = editor.document;
+	if (!rng) {
+		rng = new vscode.Range(doc.positionAt(0), doc.positionAt(doc.getText().length));
+	}
+	if (text instanceof vscode.SnippetString) {
+		editor.insertSnippet(text, rng);
+	} else {
+		editor.insertSnippet(new vscode.SnippetString(text), rng);
+	}
+}
+
 export function fetchAllReqParams(parsedQuery): any[] {
 	if (!parsedQuery) {
 		return null;
@@ -41,22 +54,7 @@ export function fetchAllReqParams(parsedQuery): any[] {
 	}
 }
 
-export function createSnippetParams(json, missedParams: string[] = [], toAppend: boolean = false): vscode.SnippetString {
-	if (toAppend === true) {
-		let str = '';
-		if (Object.keys(json).length > 0) {
-			str = ',\n' 
-		}
-		str = str + '\t';
-		if (missedParams && missedParams.length > 0) {
-			for (let index = 0; index < missedParams.length; index++) {
-				const element = missedParams[index];
-				if (index > 0) str = str + ',\n'
-				str = str + `"${element}": ` + '\"${' + (index+1) + ':value}\"';	// @TODO append values as its type
-			}
-		}
-		return new vscode.SnippetString(str + '\n');
-	} else {
+export function createSnippetParams(json, missedParams: string[] = []): vscode.SnippetString {
 		if (missedParams && missedParams.length > 0) {
 			for (let index = 0; index < missedParams.length; index++) {
 				const element = missedParams[index];
@@ -64,7 +62,6 @@ export function createSnippetParams(json, missedParams: string[] = [], toAppend:
 			}
 		}
 		return new vscode.SnippetString(JSON.stringify(json, null, 2));
-	}
 }
 
 export function readFileAsJson(file, def={}, whenEmpty={}) {

@@ -109,6 +109,11 @@
         "category": "NyQL"
       },
       {
+        "title": "Convert SQL Query to NyQL query",
+        "command": "nyql.convertFromSql",
+        "category": "NyQL"
+      },
+      {
         "title": "Set NyQL Root Scripts Directory",
         "command": "nyql.setRootScriptDir",
         "category": "NyQL"
