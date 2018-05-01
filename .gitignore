@@ -4,3 +4,4 @@ out/
 *.iml
 utils/.idea/
 utils/target
+utils/logs

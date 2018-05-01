@@ -143,8 +143,6 @@ public class Server extends NanoHTTPD {
             return JsonOutput.toJson(Refs.process(input));
         } else if (cmd.equalsIgnoreCase("convert")) {
             return JsonOutput.toJson(Converter.process(input));
-        } else if (cmd.equalsIgnoreCase("format")) {
-            return JsonOutput.toJson(Formatter.process(input));
         } else if (cmd.equalsIgnoreCase("con")) {
             createInst(input);
         } else if (cmd.equalsIgnoreCase("exit")) {

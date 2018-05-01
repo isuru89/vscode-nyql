@@ -9,6 +9,8 @@ export class NyReferenceProvider implements vscode.ReferenceProvider {
     try {
       if (document) {
         return new Promise((resolve, reject) => {
+          token.onCancellationRequested(() => resolve(null));
+          
           nyClient.sendMessage({
             cmd: 'refs',
             root: nySettings.scriptsDir,
