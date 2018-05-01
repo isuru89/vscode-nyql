@@ -1,0 +1,30 @@
+{
+  "version": 2,
+
+  "activate": "x-vscode",
+
+  "caching": {
+    "compiledScripts": false,
+    "generatedQueries": false,
+    "allowRecompilation": false
+  },
+
+  "repository": {
+    "mapper": "x-vscode",
+    "mapperArgs": {
+      "baseDir": "./scripts"
+    }
+  },
+
+  "executor": {
+    "impl": "dummy",
+
+    "url": "jdbc:mysql://localhost/sakila",
+    "username": "gtobuild",
+    "password": "MTIzNHF3ZXIk",
+
+    "pooling": {
+      "impl": "hikari"
+    }
+  }
+}
