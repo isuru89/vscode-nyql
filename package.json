@@ -165,6 +165,7 @@
     "tslint": "tslint -c tslint.json src/extension.ts"
   },
   "devDependencies": {
+    "@types/handlebars": "^4.0.37",
     "@types/mysql2": "github:types/mysql2",
     "@types/node": "^6.0.40",
     "typescript": "^2.1.4",
@@ -172,6 +173,7 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
+    "handlebars": "^4.0.11",
     "mysql2": "^1.5.3"
   }
 }

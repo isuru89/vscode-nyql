@@ -552,5 +552,11 @@
         "prefix": "nyqlJoinClause",
         "description": "NyQL join clause",
         "body": "${1|INNER_JOIN,LEFT_JOIN,RIGHT_JOIN,FULL_JOIN,CROSS_JOIN|} (TABLE('${2:t2}').alias('${3:ta}')) ON ${4:a2}.${5:c1}, ${3}.${6:c2}"
+    },
+
+    "Target Clause": {
+        "prefix": "TARGET",
+        "description": "Main table of the query.",
+        "body": "TARGET (TABLE('${1:TableName}').alias('${2:alias}'))"
     }
 }

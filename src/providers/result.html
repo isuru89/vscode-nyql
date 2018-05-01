@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        html, body {
+          height: 100%;
+        }
+        body {
+          margin: 0;
+          overflow: scroll;
+        }
+        pre {
+          white-space: pre-wrap;       /* Since CSS 2.1 */
+          line-height: 1.6;
+          font-family: Menlo, Monaco, "Courier New", monospace;
+        }
+      </style>
+</head>
+<body>
+  <script>
+    var viewType = 1; 
+    function clickAsJson(e) {
+      var x = document.getElementById('jsonRecords');
+      var y = document.getElementById('tblRecords');
+      if (x.style.display === "none") {
+        x.style.display = "block";
+        y.style.display = "none";
+        viewType = 2;
+      } else {
+        x.style.display = "none";
+        y.style.display = "block";
+        viewType = 1;
+      }
+
+      document.getElementById('btnToggle').innerHTML = viewType === 1 ? 'As Json' : 'As Table';
+    }
+  </script>
+  <div>
+    <button id="btnToggle" onclick="clickAsJson(this);">As Json</button>
+    <div>#{{recs.length}} record(s) returned.</div>
+    <pre id="jsonRecords" style="display: none;">{{toJson recs}}</pre>
+    <table id="tblRecords" border=1>
+      <tr>
+        {{#each cols}}
+          <td><b>{{this}}</b></td>
+        {{/each}}
+      </tr>
+      {{#each recs}}
+        <tr>
+          {{#each ../cols}}
+            <td>{{get .. this}}</td>
+          {{/each}}
+        </tr>
+      {{/each}}
+    </table>
+  </div>
+</body>
+</html>

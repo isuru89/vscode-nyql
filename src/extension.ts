@@ -8,25 +8,17 @@ import * as vscode from "vscode";
 
 import { NyQLCompletionItemProvider } from "./nySuggest";
 
-import * as fs from "fs";
-import * as cmds from "./nyCommands";
-import { NyConnection } from "./nyModel";
 import nySettings from "./nySettings";
-import { constants } from "fs";
 
+import * as commands from "./commands";
 import nyClient from "./client/nyClient";
-
-const nyConnectionInfo: NyConnection  = {
-  dialect: 'mysql',
-  host: 'cmddtennakoon',
-  username: 'root',
-  password: '',
-  databaseName: 'insight6'
-} as NyConnection;
-
-let connection;
+import { NyReferenceProvider } from "./providers/nyReferences";
 
 export async function activate(context: vscode.ExtensionContext) {
+  const NY_MODE = { language: 'nyql' };
+  nySettings.extensionRoot = context.extensionPath;
+  nySettings.init();
+
   registerCommands(context);
 
   context.subscriptions.push(nySettings);
@@ -40,6 +32,7 @@ export async function activate(context: vscode.ExtensionContext) {
     await nySettings.refreshDb(nycon);
   }
 
+  context.subscriptions.push(vscode.languages.registerReferenceProvider(NY_MODE, new NyReferenceProvider()));
   context.subscriptions.push(vscode.languages.registerCompletionItemProvider("nyql", new NyQLCompletionItemProvider(), 
     '.', '(', '/', "'", '\"', '$'));
 
@@ -73,13 +66,13 @@ export async function deactivate() {
 
 
 function registerCommands(ctx: vscode.ExtensionContext) {
-  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.setRootScriptDir', cmds.setRootScriptDir));
-  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.createNewNyQLConnection', cmds.createNewNyQLConnection));
-  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.removeNyQLConnection', cmds.removeNyQLConnection));
-  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.connectForNyQL', cmds.connectForNyQL));
-  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.reloadSchema', cmds.reloadSchema));
-  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.setDefaultConnection', cmds.setDefaultConnection));
-  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.parseScript', cmds.parseScript));
-  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.executeScript', cmds.executeScript));
-  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.convertFromSql', cmds.convertSqlToNyQL));
+  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.setRootScriptDir', commands.setRootScriptDir));
+  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.createNewNyQLConnection', commands.createNyQLConnection));
+  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.removeNyQLConnection', commands.removeNyQLConnection));
+  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.connectForNyQL', commands.connectToNyQL));
+  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.reloadSchema', commands.reloadSchema));
+  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.setDefaultConnection', commands.setDefaultConnection));
+  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.parseScript', commands.parseScript));
+  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.executeScript', commands.executeScript));
+  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.convertFromSql', commands.convertSqlToNyQL));
 }

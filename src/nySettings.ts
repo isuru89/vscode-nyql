@@ -8,14 +8,13 @@ import {NyQLDatabaseConnection} from "./nyDb";
 import nyClient from "./client/nyClient";
 import { NyQLViewHtml } from "./providers/parsedQueryView";
 
-const preview = new NyQLViewHtml();
-
 class NySettings implements vscode.Disposable {
 
+  public extensionRoot;
   public previewUri = vscode.Uri.parse('nyql://isuru');
-  public previewHtml: NyQLViewHtml = new NyQLViewHtml();
+  public previewHtml: NyQLViewHtml;
   private configs: vscode.WorkspaceConfiguration;
-  private scriptsDir: string;
+  public scriptsDir: string;
   private db: NyQLDatabaseConnection;
   private statusBar: vscode.StatusBarItem;
   private activeConnection: NyConnection;
@@ -28,6 +27,10 @@ class NySettings implements vscode.Disposable {
       this.scriptsDir = vscode.workspace.rootPath;
     }
     this.db = new NyQLDatabaseConnection();
+  }
+
+  init() {
+    this.previewHtml = new NyQLViewHtml(this.extensionRoot);
   }
 
   getNyStatusBar(): vscode.StatusBarItem {
@@ -129,10 +132,6 @@ class NySettings implements vscode.Disposable {
 
   getDb() {
     return this.db;
-  }
-
-  getScriptsDir(): string {
-    return this.scriptsDir;
   }
 
   setScriptsDir(scriptsDir: string) {

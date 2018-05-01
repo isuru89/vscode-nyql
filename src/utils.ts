@@ -2,6 +2,14 @@ import * as vscode from "vscode";
 import * as p from "path";
 import * as fs from "fs";
 
+export function toAbsDir(path: string, wsRoot: string) {
+  let dir = path || wsRoot;
+  if (!p.isAbsolute(dir)) {
+    dir = p.join(wsRoot, path);
+  }
+  return dir;
+}
+
 export function isPositionInString(document: vscode.TextDocument, position: vscode.Position): boolean {
 	let lineText = document.lineAt(position.line).text;
 	let lineTillCurrentPosition = lineText.substr(0, position.character);

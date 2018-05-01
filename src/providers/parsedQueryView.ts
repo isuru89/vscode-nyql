@@ -1,26 +1,62 @@
 import * as vscode from "vscode";
-import { getParsedResult, parseScript, getExecutedResult } from "../nyCommands";
+import { getParsedResult, parseScript } from "../commands/parseScript";
+import { getExecutedResult } from "../commands/executeScript";
+import * as fs from "fs";
+import * as path from "path";
+import * as hb from "handlebars";
 
 export class NyQLViewHtml implements vscode.TextDocumentContentProvider {
   private _onDidChange = new vscode.EventEmitter<vscode.Uri>();
+
+  private parsedHtml;
+  private executedHtml;
+  private errorParseHtml;
+  private errorExecHtml;
+
+  constructor(extPath: string) {
+    this.parsedHtml = hb.compile(this.loadHtml(extPath, "parsed.html"));
+    this.executedHtml = hb.compile(this.loadHtml(extPath, "result.html"));
+    this.errorParseHtml = hb.compile(this.loadHtml(extPath, "error.html"));
+    this.errorExecHtml = hb.compile(this.loadHtml(extPath, "error-exec.html"));
+
+    this.initHb();
+  }
+
+  private loadHtml(extPath: string, fileName: string): string {
+    return fs
+      .readFileSync(path.join(extPath, "src", "providers", fileName))
+      .toString();
+  }
+
+  private initHb() {
+    hb.registerHelper("get", function(obj, prop) {
+      return obj[prop];
+    });
+    hb.registerHelper("toJson", function (recs) {
+      return JSON.stringify(recs, null, 2);
+    });
+  }
 
   get onDidChange(): vscode.Event<vscode.Uri> {
     return this._onDidChange.event;
   }
 
   async update(uri: vscode.Uri) {
-      this._onDidChange.fire(uri);
+    this._onDidChange.fire(uri);
   }
 
-  async provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken) {
+  async provideTextDocumentContent(
+    uri: vscode.Uri,
+    token: vscode.CancellationToken
+  ) {
     if (vscode.window.activeTextEditor) {
-      if (uri.fragment === '/execute') {
+      if (uri.fragment === "/execute") {
         return this.renderExecuteResult();
       }
 
       try {
-          const qr = await getParsedResult();
-          return this.renderParsedView(qr.query);
+        const qr = await getParsedResult();
+        return this.renderParsedView(qr.query);
       } catch (err) {
         return this.renderError(err);
       }
@@ -29,74 +65,20 @@ export class NyQLViewHtml implements vscode.TextDocumentContentProvider {
 
   private async renderExecuteResult() {
     try {
-    const result = await getExecutedResult();
-    const cols = result.columns as string[];
-    const recs = result.result as any[];
-    return `<!DOCTYPE html>
-      <html>
-      <head></head>
-      <body>
-        <div>
-          <div>#${recs.length} record(s) returned.</div>
-          <table border=1>
-            <tr>
-            ${cols.map(c => "<td><b>"+ c +"</b></td>")}
-            </tr>
-            ${recs.map(r => {
-              return '<tr>'
-                + cols.map(c => '<td>' + r[c] + '</td>')
-                + '</tr>'
-            })}
-          </table>
-        </div>
-      </body>
-      </html>
-      `;
+      const result = await getExecutedResult();
+      const cols = result.columns as string[];
+      const recs = result.result as any[];
+      return this.executedHtml({ cols: cols, recs: recs });
     } catch (err) {
-      return this.renderError(err);
+      return this.errorExecHtml({ err: err });
     }
   }
 
   private renderError(err) {
-    return `<!DOCTYPE html>
-    <html>
-    <head></head>
-    <body>
-      <div>Cannot parse this query! May be this is a script!</div>
-      <div>${err}</div>
-    </body>
-    </html>
-    `
+    return this.errorParseHtml({ err: err });
   }
 
   private renderParsedView(query: string) {
-    return `<!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <style>
-        html, body {
-          height: 100%;
-        }
-        body {
-          margin: 0;
-          overflow: scroll;
-        }
-        pre {
-          white-space: pre-wrap;       /* Since CSS 2.1 */
-          white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
-          line-height: 1.6;
-          font-family: Menlo, Monaco, "Courier New", monospace;
-      }
-      </style>
-    </head>
-    <body>
-        <div>
-      <pre>${query}</pre>
-      </div>
-    </body>
-    </html>
-    `;
+    return this.parsedHtml({ query: query });
   }
 }
