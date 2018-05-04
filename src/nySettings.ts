@@ -11,7 +11,8 @@ import { NyQLViewHtml } from "./providers/parsedQueryView";
 class NySettings implements vscode.Disposable {
 
   public extensionRoot;
-  public previewUri = vscode.Uri.parse('nyql://isuru');
+  public executeUri = vscode.Uri.parse('nyql://isuru/execute');
+  public parseUri = vscode.Uri.parse('nyql://isuru/parse');
   public previewHtml: NyQLViewHtml;
   private configs: vscode.WorkspaceConfiguration;
   public scriptsDir: string;

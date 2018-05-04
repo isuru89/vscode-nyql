@@ -11,7 +11,7 @@ const Win = vscode.window;
 export async function getParsedResult() {
   if (Win.activeTextEditor) {
     const activeDocFullPath = Win.activeTextEditor.document.fileName;
-    const baseScriptsDir = nySettings.getScriptsDir();
+    const baseScriptsDir = nySettings.scriptsDir;
     let relPath = path.relative(baseScriptsDir, activeDocFullPath);
     const pos = relPath.lastIndexOf('.');
     if (pos > 0) {
@@ -32,6 +32,6 @@ export async function getParsedResult() {
 
 export async function parseScript() {
   if (Win.activeTextEditor) {
-    openHtml(nySettings.previewUri, '/query' );
+    openHtml(nySettings.parseUri, 'Parsed' );
   }
 }

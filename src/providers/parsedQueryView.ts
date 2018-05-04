@@ -50,7 +50,7 @@ export class NyQLViewHtml implements vscode.TextDocumentContentProvider {
     token: vscode.CancellationToken
   ) {
     if (vscode.window.activeTextEditor) {
-      if (uri.fragment === "/execute") {
+      if (uri.path === "/execute") {
         return this.renderExecuteResult();
       }
 

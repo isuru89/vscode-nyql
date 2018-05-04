@@ -15,12 +15,34 @@
       white-space: pre-wrap;       /* Since CSS 2.1 */
       line-height: 1.6;
       font-family: Menlo, Monaco, "Courier New", monospace;
+      color: white;
   }
+  #editor {
+        margin: 0 5px;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
   </style>
 </head>
 <body>
     <div>
-  <pre>{{query}}</pre>
+  <pre id="editor">{{query}}</pre>
   </div>
+
+<script src="http://localhost:9887/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+  var editor = ace.edit("editor");
+  editor.setOptions({
+    readOnly: true,
+    showLineNumbers: false,
+    wrap: true,
+    showGutter: false
+  });
+  editor.setTheme("ace/theme/twilight");
+  editor.session.setMode("ace/mode/sql");
+</script>
 </body>
 </html>

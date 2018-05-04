@@ -7,7 +7,7 @@ import nyClient from "../client/nyClient";
 import { fetchAllReqParams, readFileAsJson, createDataFile,
   getMissingParameters, createSnippetParams, replaceText } from "../utils";
 import { openHtml } from "./utils";
-import { getParsedResult } from "./parseScript";
+import { getParsedResult, parseScript } from "./parseScript";
 
 const Win = vscode.window;
 
@@ -16,6 +16,7 @@ const Win = vscode.window;
 export async function executeScript() {
   if (Win.activeTextEditor && Win.activeTextEditor.document.languageId === 'nyql') {
     const parsedResult = await getParsedResult();
+    await parseScript();
     const reqParams = fetchAllReqParams(parsedResult);
 
     if (reqParams && reqParams.length > 0) {
@@ -47,15 +48,15 @@ export async function executeScript() {
     }
 
     // now we are ok to run query
-    nySettings.previewHtml.update(nySettings.previewUri.with({ fragment: '/execute' }));
-    await openHtml(nySettings.previewUri.with({ fragment: '/execute' }), '/execute', vscode.ViewColumn.Three);
+    nySettings.previewHtml.update(nySettings.executeUri);
+    await openHtml(nySettings.executeUri, 'Execute', vscode.ViewColumn.Three);
   }
 }
 
 export async function getExecutedResult() {
   if (Win.activeTextEditor) {
     const activeDocFullPath = Win.activeTextEditor.document.fileName;
-    const baseScriptsDir = nySettings.getScriptsDir();
+    const baseScriptsDir = nySettings.scriptsDir;
     let relPath = path.relative(baseScriptsDir, activeDocFullPath);
     const pos = relPath.lastIndexOf('.');
     if (pos > 0) {

@@ -14,6 +14,30 @@
           line-height: 1.6;
           font-family: Menlo, Monaco, "Courier New", monospace;
         }
+        #jsonRecords {
+          margin: 50px 5px 0px 5px;
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          right: 0;
+        }
+        .btn {
+          font-family: Arial;
+          color: #ffffff;
+          font-size: 12px;
+          background: #3498db;
+          padding: 5px 10px 5px 10px;
+          text-decoration: none;
+          width: 100px;
+          text-align: center;
+          cursor:pointer;
+        }
+        .btn:hover {
+          background: #3cb0fd;
+          background-image: linear-gradient(to bottom, #3cb0fd, #3498db);
+          text-decoration: none;
+        }
       </style>
 </head>
 <body>
@@ -36,7 +60,7 @@
     }
   </script>
   <div>
-    <button id="btnToggle" onclick="clickAsJson(this);">As Json</button>
+    <div id="btnToggle" class="btn" onclick="clickAsJson(this);">As Json</div>
     <div>#{{recs.length}} record(s) returned.</div>
     <pre id="jsonRecords" style="display: none;">{{toJson recs}}</pre>
     <table id="tblRecords" border=1>
@@ -54,5 +78,17 @@
       {{/each}}
     </table>
   </div>
+  <script src="http://localhost:9887/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+  var editor = ace.edit("jsonRecords");
+  editor.setOptions({
+    readOnly: true,
+    showLineNumbers: false,
+    wrap: false,
+    showGutter: true
+  });
+  editor.setTheme("ace/theme/twilight");
+  editor.session.setMode("ace/mode/json");
+</script>
 </body>
 </html>

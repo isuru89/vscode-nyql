@@ -15,10 +15,14 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -29,10 +33,15 @@ public class Server extends NanoHTTPD {
 
     private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
 
+    private static final String CONTENT_TYPE_CSS = "text/css";
+    private static final String CONTENT_TYPE_JS = "application/javascript";
+
     private final JSONParser parser = new JSONParser();
     private static final String APP_JSON = "application/json";
 
     private static final Map<String, NyQLInstance> NY_POOL = new HashMap<String, NyQLInstance>();
+
+    private static final List<File> dirs = new ArrayList<>();
 
     public Server(int port) {
         super(port);
@@ -42,14 +51,14 @@ public class Server extends NanoHTTPD {
         start(args);
     }
 
-
-
     @SuppressWarnings("unchecked")
     private static void start(String[] args) throws Exception {
         Map<String, String> map = NHelper.argParser(args);
-        String port = map.get("p").toString();
+        String port = map.get("p");
         System.out.println("Starting with port: " + port);
         int p = Integer.parseInt(port);
+
+        dirs.add(new File("../node_modules/ace-builds/src-min").getCanonicalFile());
 
         final Server s = new Server(p);
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
@@ -68,6 +77,10 @@ public class Server extends NanoHTTPD {
 
     @Override
     public Response serve(IHTTPSession session) {
+        if (session.getUri().length() > 1) {
+            return serveStatics(session);
+        }
+
         Map<String, String> body = new HashMap<>();
         try {
             session.parseBody(body);
@@ -84,6 +97,31 @@ public class Server extends NanoHTTPD {
             return newFixedLengthResponse(Response.Status.BAD_REQUEST, APP_JSON, e.getMessage());
         } catch (NyException e) {
             return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, APP_JSON, e.getMessage());
+        }
+    }
+
+    private Response serveStatics(IHTTPSession session) {
+        String path = session.getUri();
+        String contentType;
+        if (path.endsWith("css")) {
+            contentType = CONTENT_TYPE_CSS;
+        } else {
+            contentType = CONTENT_TYPE_JS;
+        }
+        FileInputStream fis;
+        File file = null;
+        try {
+            for (int i = 0; i < dirs.size(); i++) {
+                File tmp = new File(dirs.get(i), path);
+                if (tmp.exists()) {
+                    file = tmp;
+                    break;
+                }
+            }
+            fis = new FileInputStream(file);
+            return newFixedLengthResponse(Response.Status.OK, contentType, fis, file.length());
+        } catch (FileNotFoundException e) {
+            return newFixedLengthResponse(Response.Status.NOT_FOUND, contentType, null);
         }
     }
 

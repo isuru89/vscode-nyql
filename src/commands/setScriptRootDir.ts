@@ -8,7 +8,7 @@ export async function setRootScriptDir() {
   const rootDir = await Win.showInputBox({
     ignoreFocusOut: true,
     placeHolder: "Relative path to the workspace directory.",
-    prompt: `Specify root scripts folder. [Current: ${nySettings.getScriptsDir()}]`,
+    prompt: `Specify root scripts folder. [Current: ${nySettings.scriptsDir}]`,
     validateInput: v => {
       let dir = toAbsDir(v, Ws.rootPath);
       existsSync(dir)
@@ -20,7 +20,7 @@ export async function setRootScriptDir() {
   if (rootDir) {
     let wsroot = Ws.rootPath;
     let dir = toAbsDir(rootDir, wsroot);
-    nySettings.setScriptsDir(dir);
+    nySettings.scriptsDir = dir;
     Win.showInformationMessage("NyQL script directory set to: \n" + dir);
   }
 }

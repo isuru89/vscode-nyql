@@ -237,7 +237,7 @@ export class NyQLCompletionItemProvider
       return;
     }
 
-    return this.getFolderItems(path.join(nySettings.getScriptsDir(), ppath)).then(results => {
+    return this.getFolderItems(path.join(nySettings.scriptsDir, ppath)).then(results => {
       let items: Array<vscode.CompletionItem> = new Array<vscode.CompletionItem>();
       results.forEach(r => {
         let ci = new vscode.CompletionItem(r.i, r.d ? vscode.CompletionItemKind.Folder : vscode.CompletionItemKind.File);

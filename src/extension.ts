@@ -42,15 +42,15 @@ export async function activate(context: vscode.ExtensionContext) {
   vscode.workspace.onDidSaveTextDocument((e: vscode.TextDocument) => {
     if (e) {
       console.log('on save triggered ', e.fileName)
-      preview.update(nySettings.previewUri);
+      preview.update(nySettings.parseUri);
     }
   })
-  vscode.window.onDidChangeActiveTextEditor((e: vscode.TextEditor) => {
-    if (e && e.document && e.document.languageId == 'nyql') {
-      console.log('nyql activated!')
-      preview.update(nySettings.previewUri);
-    }
-  })
+  // vscode.window.onDidChangeActiveTextEditor((e: vscode.TextEditor) => {
+  //   if (e && e.document && e.document.languageId == 'nyql') {
+  //     console.log('nyql activated!')
+  //     preview.update(nySettings.parseUri);
+  //   }
+  // })
 
   context.subscriptions.push(registration);
 
