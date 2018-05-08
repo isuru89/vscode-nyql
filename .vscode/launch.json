@@ -9,6 +9,9 @@
             "name": "Extension",
             "type": "extensionHost",
             "request": "launch",
+            "env": {
+                "NYQL_VSCODE_DEV": "true"
+            },
             "runtimeExecutable": "${execPath}",
             "sourceMaps": true,
             "args": [

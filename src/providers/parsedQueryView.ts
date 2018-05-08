@@ -58,6 +58,7 @@ export class NyQLViewHtml implements vscode.TextDocumentContentProvider {
         const qr = await getParsedResult();
         return this.renderParsedView(qr.query);
       } catch (err) {
+        console.log(err.message);
         return this.renderError(err);
       }
     }
@@ -75,7 +76,7 @@ export class NyQLViewHtml implements vscode.TextDocumentContentProvider {
   }
 
   private renderError(err) {
-    return this.errorParseHtml({ err: err });
+    return this.errorParseHtml({ err: err.message });
   }
 
   private renderParsedView(query: string) {

@@ -4,13 +4,22 @@ import * as path from "path";
 
 import nySettings from "../nySettings";
 import nyClient from "../client/nyClient";
+import { filenameWithouExt } from "../utils";
 import { openHtml } from "./utils";
 
 const Win = vscode.window;
 
 export async function getParsedResult() {
   if (Win.activeTextEditor) {
-    const activeDocFullPath = Win.activeTextEditor.document.fileName;
+    const textEditor = Win.activeTextEditor;
+    if (textEditor.document.isDirty) {
+      const response = await Win.showInformationMessage("You have unsaved changes in this file! Do you want to save and parse the query?",
+       "yes", "no");
+       if (response !== "yes") {
+         return;
+       }
+    }
+    const activeDocFullPath = textEditor.document.fileName;
     const baseScriptsDir = nySettings.scriptsDir;
     let relPath = path.relative(baseScriptsDir, activeDocFullPath);
     const pos = relPath.lastIndexOf('.');
@@ -32,6 +41,7 @@ export async function getParsedResult() {
 
 export async function parseScript() {
   if (Win.activeTextEditor) {
-    openHtml(nySettings.parseUri, 'Parsed' );
+    const fn = filenameWithouExt(Win.activeTextEditor.document.fileName) + '.parsed';
+    openHtml(nySettings.parseUri, fn );
   }
 }

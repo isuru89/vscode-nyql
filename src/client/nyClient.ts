@@ -6,23 +6,31 @@ import Axios from "axios";
 const PORT: Number = 9887;
 const URL:string = 'http://localhost:' + PORT;
 
+const DEV = process.env['NYQL_VSCODE_DEV'] || false;
+
 class NyClient {
 
   private javaProc: ChildProcess;
 
   start(extPath: string) {
-    return this.startProcess(extPath)
-      .then(r => {
-        return new Promise((resolve, reject) => {
-          Axios.post(URL, {
-            cmd: 'ping'
-          }).then(res => resolve(res.data))
-          .catch(err => reject(err))
-        });
-      });
+    if (DEV) {
+      return this.doPing();
+    } else {
+      return this.startProcess(extPath)
+        .then(r => this.doPing());
+    }
   }
 
-  startProcess(extPath: string) {
+  private doPing() {
+    return new Promise((resolve, reject) => {
+      Axios.post(URL, {
+        cmd: 'ping'
+      }).then(res => resolve(res.data))
+      .catch(err => reject(err))
+    });
+  }
+
+  private startProcess(extPath: string) {
     return new Promise((resolve, reject) => {
       console.log(extPath);
       let started = false;
@@ -56,7 +64,9 @@ class NyClient {
   }
 
   async close() {
-    await Axios.post(URL, { cmd: 'exit' });
+    if (!DEV) {
+      await Axios.post(URL, { cmd: 'exit' });
+    }
   }
 
 }
