@@ -23,6 +23,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(nySettings);
   
+  try {
+    console.log(context.extensionPath);
+    nyClient.start(context.extensionPath);
+  } catch (err) {
+    await nyClient.close();
+  }
+
+  
   const statusBar = nySettings.getNyStatusBar();
   statusBar.show();
   context.subscriptions.push(statusBar);
@@ -54,7 +62,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(registration);
 
-  nyClient.start();
 }
 
 export async function deactivate() {

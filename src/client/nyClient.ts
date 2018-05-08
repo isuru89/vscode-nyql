@@ -10,25 +10,31 @@ class NyClient {
 
   private javaProc: ChildProcess;
 
-  start() {
-    new Promise((resolve, reject) => {
-      Axios.post(URL, {
-        cmd: 'ping'
-      }).then(res => resolve(res.data))
-      .catch(err => reject(err))
-    });
+  start(extPath: string) {
+    return this.startProcess(extPath)
+      .then(r => {
+        return new Promise((resolve, reject) => {
+          Axios.post(URL, {
+            cmd: 'ping'
+          }).then(res => resolve(res.data))
+          .catch(err => reject(err))
+        });
+      });
   }
 
-  startProcess() {
+  startProcess(extPath: string) {
     return new Promise((resolve, reject) => {
-      console.log(vscode.workspace.rootPath);
+      console.log(extPath);
       let started = false;
-      let jfile = path.normalize(__dirname + '/../../utils/target/vscode-nyql.jar');
-      this.javaProc = spawn('java', ['-jar', jfile, '-p',  PORT.toString()]);
+      let dirs = path.join(extPath, 'node_modules/ace-builds/src-min')
+      let jfile = path.normalize(path.join(extPath, 'utils/target/vscode-nyql.jar'));
+      this.javaProc = spawn('java', ['-jar', jfile, '-p',  PORT.toString(), '-f', dirs]);
       console.log("Spawned process: ", this.javaProc.pid);
       this.javaProc.stdout.on('data', (data) => {
         const line = data.toString().trim();
-        console.log('[NY-HELP]', line);
+        if (!started) {
+          console.log('[NY-HELP]', line);
+        }
         if (started == false && line === 'Server OK') {
           started = true;
           console.log('resolving...')
@@ -50,7 +56,7 @@ class NyClient {
   }
 
   async close() {
-    //await Axios.post(URL, { cmd: 'exit' });
+    await Axios.post(URL, { cmd: 'exit' });
   }
 
 }

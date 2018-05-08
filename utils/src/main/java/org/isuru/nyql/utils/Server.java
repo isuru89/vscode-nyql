@@ -58,7 +58,19 @@ public class Server extends NanoHTTPD {
         System.out.println("Starting with port: " + port);
         int p = Integer.parseInt(port);
 
-        dirs.add(new File("../node_modules/ace-builds/src-min").getCanonicalFile());
+        String serveDirs = map.get("f");
+        if (serveDirs != null) {
+            String[] ddirs = serveDirs.split("[,]");
+            for (String d : ddirs) {
+                System.out.println("Adding dir: " + d);
+                dirs.add(new File(d));
+            }
+        }
+        System.out.println(new File(".").getCanonicalPath());
+        File file = new File("../node_modules/ace-builds/src-min");
+        if (file.exists()) {
+            dirs.add(file.getCanonicalFile());
+        }
 
         final Server s = new Server(p);
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
