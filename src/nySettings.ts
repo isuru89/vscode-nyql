@@ -6,14 +6,14 @@ import { NyConnection } from "./nyModel";
 import {NyQLDatabaseConnection} from "./nyDb";
 
 import nyClient from "./client/nyClient";
-import { NyQLViewHtml } from "./providers/parsedQueryView";
+import { NyQLParsedView } from "./providers/parsedView";
+import { NyQLExecutionView } from "./providers/executionView";
 
 class NySettings implements vscode.Disposable {
 
   public extensionRoot;
-  public executeUri = vscode.Uri.parse('nyql://isuru/execute');
-  public parseUri = vscode.Uri.parse('nyql://isuru/parse');
-  public previewHtml: NyQLViewHtml;
+  public parsedWebView: NyQLParsedView;
+  public execWebView: NyQLExecutionView;
   private configs: vscode.WorkspaceConfiguration;
   public scriptsDir: string;
   private db: NyQLDatabaseConnection;
@@ -30,8 +30,11 @@ class NySettings implements vscode.Disposable {
     this.db = new NyQLDatabaseConnection();
   }
 
-  init() {
-    this.previewHtml = new NyQLViewHtml(this.extensionRoot);
+  init(context: vscode.ExtensionContext) {
+    this.parsedWebView = new NyQLParsedView(context.extensionPath);
+    context.subscriptions.push(this.parsedWebView);
+    this.execWebView = new NyQLExecutionView(context.extensionPath);
+    context.subscriptions.push(this.execWebView);
   }
 
   getNyStatusBar(): vscode.StatusBarItem {

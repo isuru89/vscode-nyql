@@ -4,9 +4,8 @@ import * as path from "path";
 
 import nySettings from "../nySettings";
 import nyClient from "../client/nyClient";
-import { fetchAllReqParams, readFileAsJson, createDataFile,
+import { fetchAllReqParams, readFileAsJson, createDataFile, filenameWithouExt,
   getMissingParameters, createSnippetParams, replaceText } from "../utils";
-import { openHtml } from "./utils";
 import { getParsedResult, parseScript } from "./parseScript";
 
 const Win = vscode.window;
@@ -14,14 +13,15 @@ const Win = vscode.window;
 // @TODO parameterize this so query can execute when json file is activated
 // @TODO check file save status and warn user
 export async function executeScript() {
-  if (Win.activeTextEditor && Win.activeTextEditor.document.languageId === 'nyql') {
+  const textEditor = Win.activeTextEditor;
+  if (textEditor && textEditor.document.languageId === 'nyql') {
     const parsedResult = await getParsedResult();
     await parseScript();
     const reqParams = fetchAllReqParams(parsedResult);
 
     if (reqParams && reqParams.length > 0) {
       // parameters required...
-      const filename = createDataFile(Win.activeTextEditor.document.fileName + '.json');
+      const filename = createDataFile(textEditor.document.fileName + '.json');
       // read json file
       let jsonData = readFileAsJson(filename, null);
       if (!jsonData) {
@@ -48,14 +48,14 @@ export async function executeScript() {
     }
 
     // now we are ok to run query
-    nySettings.previewHtml.update(nySettings.executeUri);
-    await openHtml(nySettings.executeUri, 'Execute', vscode.ViewColumn.Three);
+    const result = await getExecutedResult(textEditor);
+    nySettings.execWebView.update(result, 'Executed: ' + filenameWithouExt(textEditor.document.fileName));
   }
 }
 
-export async function getExecutedResult() {
-  if (Win.activeTextEditor) {
-    const activeDocFullPath = Win.activeTextEditor.document.fileName;
+async function getExecutedResult(textEditor: vscode.TextEditor) {
+  if (textEditor) {
+    const activeDocFullPath = textEditor.document.fileName;
     const baseScriptsDir = nySettings.scriptsDir;
     let relPath = path.relative(baseScriptsDir, activeDocFullPath);
     const pos = relPath.lastIndexOf('.');

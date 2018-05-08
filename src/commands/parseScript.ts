@@ -5,7 +5,6 @@ import * as path from "path";
 import nySettings from "../nySettings";
 import nyClient from "../client/nyClient";
 import { filenameWithouExt } from "../utils";
-import { openHtml } from "./utils";
 
 const Win = vscode.window;
 
@@ -40,8 +39,13 @@ export async function getParsedResult() {
 }
 
 export async function parseScript() {
-  if (Win.activeTextEditor) {
-    const fn = filenameWithouExt(Win.activeTextEditor.document.fileName) + '.parsed';
-    openHtml(nySettings.parseUri, fn );
+  try {
+    const result = await getParsedResult();
+    if (result) {
+      const fn = filenameWithouExt(Win.activeTextEditor.document.fileName);
+      nySettings.parsedWebView.update(result, 'Parsed: ' + fn).activate();
+    }
+  } catch (err) {
+    nySettings.parsedWebView.updateError(err).activate();
   }
 }

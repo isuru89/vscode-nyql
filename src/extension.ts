@@ -17,7 +17,7 @@ import { NyReferenceProvider } from "./providers/nyReferences";
 export async function activate(context: vscode.ExtensionContext) {
   const NY_MODE = { language: 'nyql' };
   nySettings.extensionRoot = context.extensionPath;
-  nySettings.init();
+  nySettings.init(context);
 
   registerCommands(context);
 
@@ -44,15 +44,15 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.languages.registerCompletionItemProvider("nyql", new NyQLCompletionItemProvider(), 
     '.', '(', '/', "'", '\"', '$'));
 
-  const preview = nySettings.previewHtml;
-  let registration = vscode.workspace.registerTextDocumentContentProvider('nyql', preview);
+  // const preview = nySettings.previewHtml;
+  // let registration = vscode.workspace.registerTextDocumentContentProvider('nyql', preview);
 
-  vscode.workspace.onDidSaveTextDocument((e: vscode.TextDocument) => {
-    if (e) {
-      console.log('on save triggered ', e.fileName)
-      preview.update(nySettings.parseUri);
-    }
-  })
+  // vscode.workspace.onDidSaveTextDocument((e: vscode.TextDocument) => {
+  //   if (e) {
+  //     console.log('on save triggered ', e.fileName)
+  //     preview.update(nySettings.parseUri);
+  //   }
+  // })
   // vscode.window.onDidChangeActiveTextEditor((e: vscode.TextEditor) => {
   //   if (e && e.document && e.document.languageId == 'nyql') {
   //     console.log('nyql activated!')
@@ -60,7 +60,7 @@ export async function activate(context: vscode.ExtensionContext) {
   //   }
   // })
 
-  context.subscriptions.push(registration);
+  // context.subscriptions.push(registration);
 
 }
 
