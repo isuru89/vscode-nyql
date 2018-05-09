@@ -5,3 +5,5 @@ out/
 utils/.idea/
 utils/target
 utils/logs
+
+browser/node_modules

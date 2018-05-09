@@ -156,7 +156,21 @@
         "language": "nyql",
         "path": "./snippets/nyql.json"
       }
-    ]
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "nyql.parseScript",
+          "when": "resourceLangId == nyql",
+          "group": "1_nyqlactions"
+        },
+        {
+          "command": "nyql.executeScript",
+          "when": "resourceLangId == nyql",
+          "group": "1_nyqlactions"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "tsc -p ./",
