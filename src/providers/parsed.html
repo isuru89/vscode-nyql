@@ -1,48 +1,100 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    html, body {
+    html,
+    body {
       height: 100%;
     }
+
     body {
       margin: 0;
       overflow: scroll;
     }
+
     pre {
-      white-space: pre-wrap;       /* Since CSS 2.1 */
+      white-space: pre-wrap;
+      /* Since CSS 2.1 */
       line-height: 1.6;
       font-family: Menlo, Monaco, "Courier New", monospace;
       color: white;
-  }
-  #editor {
-        margin: 0 5px;
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        right: 0;
+    }
+
+    #editor {
+      margin: 0 5px;
+      position: absolute;
+      top: 0;
+      /* bottom: 0; */
+      left: 0;
+      right: 0;
+      height: 50%;
+    }
+    #parameters {
+      margin: 0 5px;
+      position: absolute;
+      top: 55%;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+    #btnReplace {
+      position: absolute;
+      top: 50%;
+      left: 0;
     }
   </style>
 </head>
+
 <body>
-    <div>
-  <pre id="editor">{{query}}</pre>
+  <div>
+    <pre id="editor">{{query}}</pre>
+  </div>
+  <div>
+    <button id="btnReplace" onclick="callReplacer();">Replace</button>
+  </div>
+  <div><pre id="paramOrder" style="display: hidden;">{{params}}</pre></div>
+  <div>
+    <pre id="parameters">{{userParams}}</pre>
   </div>
 
-<script src="http://localhost:9887/ace.js" type="text/javascript" charset="utf-8"></script>
-<script>
-  var editor = ace.edit("editor");
-  editor.setOptions({
-    readOnly: true,
-    showLineNumbers: false,
-    wrap: true,
-    showGutter: false
-  });
-  editor.setTheme("ace/theme/twilight");
-  editor.session.setMode("ace/mode/sql");
-</script>
+  <script src="http://localhost:9887/ace.js" type="text/javascript" charset="utf-8"></script>
+  <script>
+    var editor = ace.edit("editor");
+    editor.setOptions({
+      readOnly: true,
+      showLineNumbers: false,
+      wrap: true,
+      showGutter: false
+    });
+    editor.setTheme("ace/theme/twilight");
+    editor.session.setMode("ace/mode/sql");
+
+    var p_editor = ace.edit("parameters");
+    p_editor.setOptions({
+      showLineNumbers: false,
+      wrap: true,
+      showGutter: false,
+      selectionStyle: "text",
+      highlightActiveLine: false
+    });
+    p_editor.setTheme("ace/theme/twilight");
+    p_editor.session.setMode("ace/mode/json");
+
+    function callReplacer() {
+      //if (!vscode) {
+        let vscode = acquireVsCodeApi();
+      //}
+      
+      vscode.postMessage({
+        query: editor.getValue(),
+        params: document.getElementById('parameters').innerText.trim(),
+        order: document.getElementById('paramOrder').innerText.trim()
+      });
+    }
+  </script>
 </body>
+
 </html>

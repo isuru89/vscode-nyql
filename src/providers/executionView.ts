@@ -9,7 +9,8 @@ export class NyQLExecutionView implements vscode.Disposable {
   private execHtml;
   private errorExecHtml;
 
-  constructor(extPath: string) {
+  constructor(context: vscode.ExtensionContext) {
+    const extPath = context.extensionPath;
     this.initPanel();
     this.execHtml = hb.compile(this.loadHtml(extPath, "result.html"));
     this.errorExecHtml = hb.compile(this.loadHtml(extPath, "error-exec.html"));

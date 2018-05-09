@@ -49,7 +49,8 @@ export async function executeScript() {
 
     // now we are ok to run query
     const result = await getExecutedResult(textEditor);
-    nySettings.execWebView.update(result, 'Executed: ' + filenameWithouExt(textEditor.document.fileName));
+    const title = 'Executed: ' + filenameWithouExt(textEditor.document.fileName);
+    nySettings.execWebView.update(result, title).activate();
   }
 }
 

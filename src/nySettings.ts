@@ -31,9 +31,9 @@ class NySettings implements vscode.Disposable {
   }
 
   init(context: vscode.ExtensionContext) {
-    this.parsedWebView = new NyQLParsedView(context.extensionPath);
+    this.parsedWebView = new NyQLParsedView(context);
     context.subscriptions.push(this.parsedWebView);
-    this.execWebView = new NyQLExecutionView(context.extensionPath);
+    this.execWebView = new NyQLExecutionView(context);
     context.subscriptions.push(this.execWebView);
   }
 
