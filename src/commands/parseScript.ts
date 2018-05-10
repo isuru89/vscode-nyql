@@ -13,8 +13,8 @@ export async function getParsedResult() {
     const textEditor = Win.activeTextEditor;
     if (textEditor.document.isDirty) {
       const response = await Win.showInformationMessage("You have unsaved changes in this file! Do you want to save and parse the query?",
-       "yes", "no");
-       if (response !== "yes") {
+       "Yes", "No");
+       if (response !== "Yes") {
          return;
        }
     }
@@ -28,6 +28,8 @@ export async function getParsedResult() {
 
     const result = await nyClient.sendMessage({
       cmd: 'parse',
+      root: baseScriptsDir,
+      file: activeDocFullPath,
       name: nySettings.getActiveNyConnection().name,
       path: relPath
     });

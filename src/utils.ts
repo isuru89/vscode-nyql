@@ -55,7 +55,17 @@ export function replaceText(editor: vscode.TextEditor, text, range?: vscode.Rang
 export function fetchAllReqParams(parsedQuery): any[] {
 	if (!parsedQuery) {
 		return null;
-	} else if (parsedQuery.params && parsedQuery.params.length > 0) {
+	} 
+	
+	if (parsedQuery.parsable === false) {
+		const a1 = parsedQuery.info.params as any[];
+		const a2 = (parsedQuery.info.usedSessionVars as string[]).map(s => {
+			return { name: s, type: 'AParam' }
+		});
+		return a1.concat(a2);
+	}
+
+	if (parsedQuery.params && parsedQuery.params.length > 0) {
 		return parsedQuery.params as any[];
 	} else {
 		return [];

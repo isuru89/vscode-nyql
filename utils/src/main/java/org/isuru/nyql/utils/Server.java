@@ -195,6 +195,8 @@ public class Server extends NanoHTTPD {
             return JsonOutput.toJson(Converter.process(input));
         } else if (cmd.equalsIgnoreCase("replacer")) {
             return JsonOutput.toJson(ParamReplacer.process(input));
+        } else if (cmd.equalsIgnoreCase("pre-parse")) {
+
         } else if (cmd.equalsIgnoreCase("con")) {
             createInst(input);
         } else if (cmd.equalsIgnoreCase("exit")) {
@@ -209,12 +211,19 @@ public class Server extends NanoHTTPD {
             removeNyQL(name);
         } else if (cmd.equalsIgnoreCase("parse")) {
             String name = input.get("name");
+            Parser.ScriptInfo scriptInfo = Parser.parse(input);
             NyQLInstance nyQLInstance = NY_POOL.get(name);
             if (nyQLInstance != null) {
+                Map<String, Object> result = new HashMap<>();
+                boolean parsable = Parser.canParsable(scriptInfo);
+                if (!parsable) {
+                    result.put("parsable", Parser.canParsable(scriptInfo));
+                    result.put("info", scriptInfo);
+                    return JsonOutput.toJson(result);
+                }
                 String path = input.get("path");
                 String data = input.get("data");
                 QScript parse = nyQLInstance.parse(path, fromStr(data));
-                Map<String, Object> result = new HashMap<>();
                 if (parse instanceof QScriptList) {
                     QScriptList scriptList = (QScriptList) parse;
                     result.put("type", scriptList.getType());
