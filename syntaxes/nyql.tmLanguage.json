@@ -423,6 +423,10 @@
 					"name": "keyword.control.operator.nyql"
 				},
 				{
+					"match": "\\b(SUM|AVG|MIN|MAX|COUNT|CASE|WHEN|THEN|ELSE)\\b",
+					"name": "keyword.control.operator.nyql"
+				},
+				{
 					"match": "\\b(try|catch|finally|throw)\\b",
 					"name": "keyword.control.exception.groovy"
 				},

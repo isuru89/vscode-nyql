@@ -147,7 +147,10 @@ class NySettings implements vscode.Disposable {
         this.refreshStatusText();
         this.statusBar.command = 'nyql.connectForNyQL';
         return Promise.resolve(con);
-      }).catch(err => Promise.reject(err));
+      }).catch(err => {
+        this.statusBar.text = '$(database) NyQL: <Error>';
+        return Promise.reject(err)
+      });
     })
   }
 
