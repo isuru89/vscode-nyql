@@ -23,6 +23,7 @@ class NHelper {
     private static Map<String, String> toJson(AParam param) {
         Map<String, String> p = new HashMap<>();
         p.put("name", param.get__name());
+        p.put("type", param.getClass().getSimpleName());
         return p;
     }
 

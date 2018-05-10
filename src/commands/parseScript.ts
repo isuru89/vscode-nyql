@@ -40,9 +40,12 @@ export async function getParsedResult() {
 
 export async function parseScript() {
   try {
-    const result = await getParsedResult();
+    let result = await getParsedResult();
     if (result) {
-      const fn = filenameWithouExt(Win.activeTextEditor.document.fileName);
+      const fullFile = Win.activeTextEditor.document.fileName;
+      const fn = filenameWithouExt(fullFile);
+      result.file = fullFile;
+      console.log(result);
       nySettings.parsedWebView.update(result, 'Parsed: ' + fn).activate();
     }
   } catch (err) {

@@ -3,18 +3,23 @@ import * as fs from "fs";
 import * as path from "path";
 import * as hb from "handlebars";
 
+const DEV = process.env['NYQL_VSCODE_DEV'] || false;
+
 export class NyQLExecutionView implements vscode.Disposable {
 
   private panel: vscode.WebviewPanel;
   private execHtml;
   private errorExecHtml;
+  private extPath;
 
   constructor(context: vscode.ExtensionContext) {
     const extPath = context.extensionPath;
-    this.initPanel();
-    this.execHtml = hb.compile(this.loadHtml(extPath, "result.html"));
-    this.errorExecHtml = hb.compile(this.loadHtml(extPath, "error-exec.html"));
-
+    this.extPath = extPath;
+    //this.initPanel();
+    if (!DEV) {
+      this.execHtml = hb.compile(this.loadHtml(extPath, "result.html"));
+      this.errorExecHtml = hb.compile(this.loadHtml(extPath, "error-exec.html"));
+    }
     this.initHb();
   }
 
@@ -26,7 +31,7 @@ export class NyQLExecutionView implements vscode.Disposable {
     this.panel = vscode.window.createWebviewPanel('nyqlExecuteView', 
       'Executed Result', 
       vscode.ViewColumn.Two, 
-      { enableScripts: true });
+      { enableScripts: true, retainContextWhenHidden: true });
     this.panel.onDidDispose(e => this.panel = null);
   }
 
@@ -49,7 +54,13 @@ export class NyQLExecutionView implements vscode.Disposable {
     try {
       const cols = result.columns as string[];
       const recs = result.result as any[];
-      return this.execHtml({ cols: cols, recs: recs });
+      const dObj = { cols: cols, recs: recs };
+      if (this.execHtml) {
+        return this.execHtml(dObj);
+      } else {
+        const tmp = hb.compile(this.loadHtml(this.extPath, "result.html"));
+        return tmp(dObj);
+      }
     } catch (err) {
       return this.errorExecHtml({ err: err });
     }

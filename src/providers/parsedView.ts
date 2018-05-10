@@ -4,18 +4,25 @@ import * as path from "path";
 import * as hb from "handlebars";
 
 import { replaceQuery } from "../commands/replaceNyQL";
+import { getExecutedResultWithData } from "../commands/executeScript";
+import nySettings from "../nySettings";
+
+const DEV = process.env['NYQL_VSCODE_DEV'] || false;
 
 export class NyQLParsedView implements vscode.Disposable {
 
   private panel: vscode.WebviewPanel;
   private parsedHtml;
   private errorParseHtml;
+  private extPath;
 
   constructor(context: vscode.ExtensionContext) {
     const extPath = context.extensionPath;
-    this.initPanel();
+    this.extPath = extPath;
+    if (!DEV) {
     this.parsedHtml = hb.compile(this.loadHtml(extPath, "parsed.html"));
     this.errorParseHtml = hb.compile(this.loadHtml(extPath, "error.html"));
+    }
 
     this.initHb();
   }
@@ -28,17 +35,25 @@ export class NyQLParsedView implements vscode.Disposable {
     this.panel = vscode.window.createWebviewPanel('nyqlParseView', 
       'Parsed Query', 
       vscode.ViewColumn.Two, 
-      { enableScripts: true });
+      { enableScripts: true, retainContextWhenHidden: true });
     this.panel.onDidDispose(e => this.panel = null);
     this.panel.webview.onDidReceiveMessage(msg => {
-      replaceQuery(msg).then(result => {
-        console.log(result);
-        this.update({
-          query: result.query,
-          params: JSON.parse(msg.order),
-          userParams: JSON.parse(msg.params)
+      if (msg.command === 'replace') {
+        replaceQuery(msg).then(result => {
+          console.log(result);
+          this.updateReplaced(result.query);
+        }).catch(err => {
+          vscode.window.showErrorMessage("Failed to parse query! Reason: " + err.message);
+        });
+      } else if (msg.command === 'execute') {
+        console.log(msg);
+        const file = msg.file;
+        getExecutedResultWithData(file, msg.data).then(result => {
+          nySettings.execWebView.update(result).activate();
+        }).catch(err => {
+          vscode.window.showErrorMessage("Failed to execute query! Reason: " + err.message);
         })
-      })
+      }
     });
   }
 
@@ -57,14 +72,34 @@ export class NyQLParsedView implements vscode.Disposable {
     });
   }
 
+  private getDefValue(p) {
+    if (p.type === 'ParamList') {
+      return [];
+    } else {
+      return "";
+    }
+  }
+
   private renderParsedView(result) {
     console.log(result);
     let ps = {};
     result.params.forEach(p => {
-      ps[p.name] = (result.userParams && result.userParams[p.name]) || ""
+      ps[p.name] = (result.userParams && result.userParams[p.name]) || this.getDefValue(p)
     });
-    return this.parsedHtml({ query: result.query, params: JSON.stringify(result.params, null, 2), 
-      userParams: JSON.stringify(ps, null, 2) });
+
+    const evt = { 
+      query: result.query, 
+      params: JSON.stringify(result.params, null, 2), 
+      userParams: JSON.stringify(ps, null, 2),
+      file: result.file
+    }
+
+    if (this.parsedHtml) {
+      return this.parsedHtml(evt);
+    } else {
+      const tmp = hb.compile(this.loadHtml(this.extPath, "parsed.html"));
+      return tmp(evt);
+    }
   }
 
   private renderError(err) {
@@ -77,6 +112,14 @@ export class NyQLParsedView implements vscode.Disposable {
     return this;
   }
   
+  updateReplaced(replacedQuery: string) {
+    this.initPanel();
+    this.panel.webview.postMessage({
+      command: 'replaced',
+      query: replacedQuery
+    })
+  }
+
   update(serverResult, title?: string): NyQLParsedView {
     this.initPanel();
     if (title) {

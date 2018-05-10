@@ -67,7 +67,7 @@ public class Server extends NanoHTTPD {
             }
         }
         System.out.println(new File(".").getCanonicalPath());
-        File file = new File("../node_modules/ace-builds/src-min");
+        File file = new File("../node_modules/ace-builds/src-noconflict");
         if (file.exists()) {
             dirs.add(file.getCanonicalFile());
         }

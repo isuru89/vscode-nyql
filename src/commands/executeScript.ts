@@ -54,23 +54,53 @@ export async function executeScript() {
   }
 }
 
-async function getExecutedResult(textEditor: vscode.TextEditor) {
-  if (textEditor) {
-    const activeDocFullPath = textEditor.document.fileName;
-    const baseScriptsDir = nySettings.scriptsDir;
-    let relPath = path.relative(baseScriptsDir, activeDocFullPath);
-    const pos = relPath.lastIndexOf('.');
-    if (pos > 0) {
-      relPath = relPath.substr(0, pos).toLowerCase();
+export async function getExecutedResultWithData(file:string, data) {
+  let dataObj = null;
+  try {
+    if (typeof data === 'string') {
+      dataObj = JSON.parse(data);
+    } else {
+      dataObj = data;
     }
-    const data = readFileAsJson(activeDocFullPath + '.json');
+  } catch (err) {
+    Win.showErrorMessage("Invalid json data format given!");
+    return Promise.reject('Invalid json data format');
+  }
 
-    const result = await nyClient.sendMessage({
+  const baseScriptsDir = nySettings.scriptsDir;
+  let relPath = path.relative(baseScriptsDir, file);
+  const pos = relPath.lastIndexOf('.');
+  if (pos > 0) {
+    relPath = relPath.substr(0, pos).toLowerCase();
+  }
+
+  return await Win.withProgress({
+    location: vscode.ProgressLocation.Notification,
+    title: 'Executing query...',
+    cancellable: false
+  }, (progress, token) => {
+     return nyClient.sendMessage({
       cmd: 'execute',
       name: nySettings.getActiveNyConnection().name,
       path: relPath,
-      data: data
+      data: dataObj
     });
+  });
+}
+
+// @TODO remove duplicates
+async function getExecutedResult(textEditor: vscode.TextEditor) {
+  if (textEditor) {
+    const activeDocFullPath = textEditor.document.fileName;
+    const data = readFileAsJson(activeDocFullPath + '.json');
+
+    const result = await getExecutedResultWithData(activeDocFullPath, data);
+    // const result = await nyClient.sendMessage({
+    //   cmd: 'execute',
+    //   name: nySettings.getActiveNyConnection().name,
+    //   path: relPath,
+    //   data: data
+    // });
     console.log(result);
     return result;
   } else {

@@ -74,11 +74,19 @@ export class NyQLDatabaseConnection {
     }
 
     getTables(): string[] {
-        return Array.from(this.schema.keys());
+        if (this.schema) {
+            return Array.from(this.schema.keys());
+        } else {
+            return [];
+        }
     }
 
     getColumns(tableName: string): string[] {
-        return this.schema.get(tableName);
+        if (this.schema) {
+            return this.schema.get(tableName);
+        } else {
+            return [];
+        }
     }
 
     getColumn(tableName: string, columnName: string) : NyColumn {

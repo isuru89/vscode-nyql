@@ -23,6 +23,7 @@
           right: 0;
         }
         .btn {
+          padding: 5px 0px;
           font-family: Arial;
           color: #ffffff;
           font-size: 12px;
@@ -42,7 +43,7 @@
 </head>
 <body>
   <script>
-    var viewType = 1; 
+    var viewType = 2; 
     function clickAsJson(e) {
       var x = document.getElementById('jsonRecords');
       var y = document.getElementById('tblRecords');
@@ -60,10 +61,10 @@
     }
   </script>
   <div>
-    <div id="btnToggle" class="btn" onclick="clickAsJson(this);">As Json</div>
+    <div id="btnToggle" class="btn" onclick="clickAsJson(this);">As Table</div>
     <div>#{{recs.length}} record(s) returned.</div>
-    <pre id="jsonRecords" style="display: none;">{{toJson recs}}</pre>
-    <table id="tblRecords" border=1>
+    <pre id="jsonRecords">{{toJson recs}}</pre>
+    <table id="tblRecords" border=1 style="display: none;">
       <tr>
         {{#each cols}}
           <td><b>{{this}}</b></td>

@@ -1,21 +1,22 @@
-import { window as Win, workspace as Ws, InputBoxOptions } from "vscode";
-import { existsSync } from "fs";
-import { isAbsolute, join } from "path";
-
 import { parseScript as ps } from "./parseScript";
 import { executeScript as es } from "./executeScript";
-import nySettings from "../nySettings";
 
+import { connectForNyQL as refConnectToNyQL } from "./connectToNyQL";
+import { convertSqlToNyQL as refConvertToNyQL } from "./convertSqlToNyQL";
+import { createNewNyQLConnection as refCreate } from "./createNyQLConnection";
+import { removeNyQLConnection as refRemove } from "./removeNyQLConnection";
+import { reloadSchema as refReload } from "./reloadSchema";
+import { setDefaultConnection as refDefaultCon } from "./setDefaultConnection";
+import { setRootScriptDir as refRootScript } from "./setScriptRootDir";
 
-
-export const convertSqlToNyQL =  require('./convertSqlToNyQL');
+export const convertSqlToNyQL =  refConvertToNyQL;
 export const parseScript = ps;
 export const executeScript = es;
 
-export const createNyQLConnection = require('./createNyQLConnection');
-export const removeNyQLConnection = require('./removeNyQLConnection');
-export const connectToNyQL = require('./connectToNyQL');
+export const createNyQLConnection = refCreate;
+export const removeNyQLConnection = refRemove;
+export const connectToNyQL = refConnectToNyQL;
 
-export const reloadSchema = require('./reloadSchema');
-export const setDefaultConnection = require('./setDefaultConnection');
-export const setRootScriptDir = require('./setScriptRootDir');
+export const reloadSchema = refReload;
+export const setDefaultConnection = refDefaultCon;
+export const setRootScriptDir = refRootScript;

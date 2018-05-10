@@ -1,5 +1,6 @@
 package org.isuru.nyql.utils;
 
+import com.virtusa.gto.nyql.model.units.ParamList;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.JdbcParameter;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
@@ -11,6 +12,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +29,6 @@ class ParamReplacer {
     @SuppressWarnings("unchecked")
     static Object process(Map<String, String> input) throws ParseException, IOException {
         Map<String, Object> map = new HashMap<>();
-        String query = input.get("q");
         String ps = input.get("ps");
         String porder = input.get("order");
         if (porder == null) {
@@ -36,6 +37,7 @@ class ParamReplacer {
         List<Map<String, Object>> order = (List<Map<String, Object>>) PARSER.parse(porder);
         Map<String, Object> p = (Map<String, Object>) PARSER.parse(ps);
 
+        String query = replaceParamLists(order, p, input.get("q"));
         StringBuilder buffer = new StringBuilder();
         ExpressionDeParser expr = new ReplaceParameters(p, order);
 
@@ -56,13 +58,48 @@ class ParamReplacer {
         }
     }
 
+    private static String replaceParamLists(List<Map<String, Object>> order, Map<String, Object> ps, String query) {
+        String q = query;
+        for (Map<String, Object> p : order) {
+            String name = p.get("name").toString();
+            if (ParamList.class.getSimpleName().equals(p.get("type"))) {
+                String pq = "::" + name + "::";
+                // a list
+                Object value = ps.get(name);
+                if (value instanceof Collection) {
+                    if (((Collection) value).isEmpty()) {
+                        q = q.replace(pq, "NULL");
+                    } else {
+                        StringBuilder rep = new StringBuilder();
+                        int curr = 0;
+                        for (Object val : (Collection) value) {
+                            if (curr > 0) rep.append(',');
+                            curr++;
+                            rep.append(ReplaceParameters.getValAsStr(val));
+                        }
+                        q = q.replace(pq, rep.toString());
+                    }
+                } else {
+                    q = q.replace(pq, "NULL");
+                }
+            }
+        }
+        System.out.println(q);
+        return q;
+    }
+
     static class ReplaceParameters extends ExpressionDeParser {
         Queue<Map<String, Object>> order;
         Map<String, Object> ps;
 
         private ReplaceParameters(Map<String, Object> allPs, List<Map<String, Object>> order) {
             ps = new HashMap<>(allPs);
-            this.order = new ArrayBlockingQueue<>(order.size());
+            if (!order.isEmpty()) {
+                this.order = new ArrayBlockingQueue<>(order.size());
+            } else {
+                this.order = new ArrayBlockingQueue<>(1);
+            }
+
             for (Map<String, Object> item : order) {
                 this.order.offer(item);
             }
@@ -87,6 +124,21 @@ class ParamReplacer {
                 this.getBuffer().append(val);
             } else {
                 throw new IllegalArgumentException("Unknown argument!");
+            }
+        }
+
+        static String getValAsStr(Object val) {
+            if (val == null) {
+                return "NULL";
+            } else if (Boolean.class.isAssignableFrom(val.getClass())) {
+                boolean bl = (boolean)val;
+                return (bl ? "1" : "0");    // TODO consider db type
+            } else if (String.class.isAssignableFrom(val.getClass())) {
+                return "'" + val.toString() + "'"; // TODO consider db type
+            } else if (Number.class.isAssignableFrom(val.getClass())) {
+                return String.valueOf(val);
+            } else {
+                return null;
             }
         }
     }

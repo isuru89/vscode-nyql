@@ -104,11 +104,21 @@ class NySettings implements vscode.Disposable {
 
   async reloadSchema() {
     if (this.activeConnection) {
-      this.statusBar.command = null;
-      this.statusBar.text = '$(database) NyQL: Reloading...';
-      await this.db.loadSchema();
-      this.statusBar.text = '$(database) NyQL: ' + this.activeConnection.name
-      this.statusBar.command = 'nyql.connectForNyQL';
+      vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: 'Refreshing schema...',
+        cancellable: false
+      }, (progress, token) => {
+        this.statusBar.command = null;
+        this.statusBar.text = '$(database) NyQL: Reloading...';
+        return this.db.loadSchema().then(ok => {
+          this.statusBar.text = '$(database) NyQL: ' + this.activeConnection.name
+          this.statusBar.command = 'nyql.connectForNyQL';
+        }).catch(err => {
+          this.statusBar.text = '$(database) <Error>: ' + this.activeConnection.name
+        })
+      })
+      
     }
   }
 
@@ -118,20 +128,27 @@ class NySettings implements vscode.Disposable {
       return null;
     }
 
-    this.statusBar.command = null;
-    this.statusBar.text = '$(database) NyQL: Connecting...'
-    this.activeConnection = con;
-    await this.db.close();
-    await this.db.reloadConnection(con);
-    await this.db.loadSchema();
-    await nyClient.sendMessage({
-      cmd: 'con',
-      scriptDir: this.scriptsDir,
-      ...con
-    });
-    this.refreshStatusText();
-    this.statusBar.command = 'nyql.connectForNyQL';
-    return con;
+    return vscode.window.withProgress({
+      location: vscode.ProgressLocation.Notification,
+      title: `Connecting to ${con.name}: ${con.host}:${con.port}...`,
+      cancellable: false
+    }, (progress, token) => {
+      this.statusBar.command = null;
+      this.statusBar.text = '$(database) NyQL: Connecting...'
+      this.activeConnection = con;
+      return this.db.close()
+      .then(ok => this.db.reloadConnection(con))
+      .then(ok => this.db.loadSchema())
+      .then(ok => nyClient.sendMessage({
+        cmd: 'con',
+        scriptDir: this.scriptsDir,
+        ...con
+      })).then(ok => {
+        this.refreshStatusText();
+        this.statusBar.command = 'nyql.connectForNyQL';
+        return Promise.resolve(con);
+      }).catch(err => Promise.reject(err));
+    })
   }
 
   getDb() {
