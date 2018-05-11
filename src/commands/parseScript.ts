@@ -43,14 +43,18 @@ export async function getParsedResult() {
 export async function parseScript() {
   try {
     let result = await getParsedResult();
-    if (result) {
-      const fullFile = Win.activeTextEditor.document.fileName;
-      const fn = filenameWithouExt(fullFile);
-      result.file = fullFile;
-      console.log(result);
-      nySettings.parsedWebView.update(result, 'Parsed: ' + fn).activate();
-    }
+    parseScriptAndShow(result, Win.activeTextEditor);
   } catch (err) {
     nySettings.parsedWebView.updateError(err).activate();
+  }
+}
+
+export async function parseScriptAndShow(result, txtEditor: vscode.TextEditor) {
+  if (result) {
+    const fullFile = txtEditor.document.fileName;
+    const fn = filenameWithouExt(fullFile);
+    result.file = fullFile;
+    console.log(result);
+    nySettings.parsedWebView.update(result, 'Parsed: ' + fn).activate();
   }
 }

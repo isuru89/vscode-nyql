@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * @author iweerarathna
@@ -124,7 +125,58 @@ class Parser {
         scan(file, domain);
 
         Map.Entry<String, ScriptInfo> next = domain.scriptInfoMap.entrySet().iterator().next();
-        return next.getValue();
+        ScriptInfo scriptInfo = next.getValue();
+        Set<String> variables = new HashSet<>();
+        List<Map<String, String>> params = new ArrayList<>();
+        Set<String> alreadyVisited = new HashSet<>();
+        alreadyVisited.add(file.getAbsolutePath());
+        findVarsRecursively(scriptInfo, variables, params, alreadyVisited, s -> new File(root, s));
+        scriptInfo.usedSessionVars.addAll(variables);
+        scriptInfo.params.addAll(params);
+        return scriptInfo;
+    }
+
+    private static void findVarsRecursively(ScriptInfo scriptInfo, Set<String> vars,
+                                            List<Map<String, String>> params,
+                                            Set<String> alreadyVisited,
+                                            Function<String, File> scriptResolver) {
+        if (scriptInfo.scriptCalls.isEmpty()) {
+            return;
+        }
+
+        for (String script : scriptInfo.scriptCalls) {
+            File grFile = scriptResolver.apply(script + ".groovy");
+            if (!grFile.exists()) {
+                grFile = scriptResolver.apply(script + ".nyql");
+                if (!grFile.exists()) {
+                    System.out.println("File does not exist! " + grFile.getAbsolutePath());
+                    break;
+                }
+            }
+
+            System.out.println("Scanning file: " + grFile.getAbsolutePath());
+
+            String content = NHelper.toContentStr(grFile);
+            ParseVisitor visitor = visit(content);
+            vars.addAll(visitor.sessionVars);
+            params.addAll(visitor.params);
+            alreadyVisited.add(grFile.getAbsolutePath());
+
+            if (!visitor.scriptCalls.isEmpty()) {
+                findVarsRecursively(getVisitorInfo(visitor), vars, params, alreadyVisited, scriptResolver);
+            }
+        }
+    }
+
+    private static ParseVisitor visit(String content) {
+        ParseVisitor visitor = new ParseVisitor();
+        List<ASTNode> astNodes = new AstBuilder().buildFromString(CompilePhase.CONVERSION, false, content);
+        for (ASTNode node : astNodes) {
+            if (!(node instanceof ClassNode)) {
+                node.visit(visitor);
+            }
+        }
+        return visitor;
     }
 
     static void scan(File dirOrFile, Domain domain) {
@@ -145,26 +197,20 @@ class Parser {
             if (fname.endsWith(".groovy") || fname.endsWith(".nyql")) {
                 String content = NHelper.toContentStr(dirOrFile);
                 System.out.println("Scanning: " + dirOrFile.getAbsolutePath());
-                ParseVisitor visitor = new ParseVisitor();
-                List<ASTNode> astNodes = new AstBuilder().buildFromString(CompilePhase.CONVERSION, false, content);
-                for (ASTNode node : astNodes) {
-                    if (!(node instanceof ClassNode)) {
-                        node.visit(visitor);
-                    }
-                }
+                ParseVisitor visitor = visit(content);
 
                 String path = domain.root.toPath().relativize(dirOrFile.toPath()).toString();
-                domain.scriptInfoMap.put(path, printVisitorInfo(visitor));
+                domain.scriptInfoMap.put(path, getVisitorInfo(visitor));
             }
         }
     }
 
-    private static ScriptInfo printVisitorInfo(ParseVisitor visitor) {
-        System.out.println(" - SESSION used   : " + visitor.sessionUsed);
-        System.out.println(" - Cached         : " + visitor.cached);
-        System.out.println(" - Scripts called : " + visitor.scriptCalls);
-        System.out.println(" - Dsl Calls      : " + visitor.dslCalls);
-        System.out.println(" - Params alls    : " + visitor.params);
+    private static ScriptInfo getVisitorInfo(ParseVisitor visitor) {
+//        System.out.println(" - SESSION used   : " + visitor.sessionUsed);
+//        System.out.println(" - Cached         : " + visitor.cached);
+//        System.out.println(" - Scripts called : " + visitor.scriptCalls);
+//        System.out.println(" - Dsl Calls      : " + visitor.dslCalls);
+//        System.out.println(" - Params alls    : " + visitor.params);
 
         ScriptInfo scriptInfo = new ScriptInfo();
         scriptInfo.cached = visitor.cached;
@@ -241,6 +287,7 @@ class Parser {
 
     private static class ParseVisitor extends CodeVisitorSupport {
 
+        private static final String EMPTY = "";
         private boolean sessionUsed = false;
         private Set<String> sessionVars = new HashSet<>();
         private List<String> dslCalls = new ArrayList<>();
@@ -270,8 +317,24 @@ class Parser {
         public void visitPropertyExpression(PropertyExpression expression) {
             if (isSessionVar(expression.getObjectExpression())) {
                 sessionVars.add(expression.getPropertyAsString());
+            } else {
+                String parents = derivePropertyChain(expression.getObjectExpression());
+                if (parents.startsWith("$SESSION.")) {
+                    String suffix = parents.substring("$SESSION.".length());
+                    sessionVars.add(suffix + "." + expression.getPropertyAsString());
+                }
             }
             super.visitPropertyExpression(expression);
+        }
+
+        private String derivePropertyChain(Expression expression) {
+            if (expression instanceof PropertyExpression) {
+                return derivePropertyChain(((PropertyExpression) expression).getObjectExpression()) + "." +
+                    ((PropertyExpression) expression).getPropertyAsString();
+            } else if (isSessionVar(expression)) {
+                return expression.getText();
+            }
+            return EMPTY;
         }
 
         @Override

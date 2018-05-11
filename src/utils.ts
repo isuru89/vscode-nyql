@@ -2,6 +2,54 @@ import * as vscode from "vscode";
 import * as p from "path";
 import * as fs from "fs";
 
+export function objectize(obj) {
+	const keys = Object.keys(obj);
+	if (keys && keys.length > 0) {
+		const dots = keys.filter(k => k.indexOf('.') >= 0);
+		if (dots.length > 0) {
+			let result = {};
+			for (let index = 0; index < keys.length; index++) {
+				const key = keys[index];
+				if (key.indexOf('.') >= 0) {
+					expandPathInObj(result, key, obj[key]);
+				} else if (!isObject(result[key])) {
+					result[key] = obj[key];
+				}
+			}
+
+
+			return result;
+		} else {
+			return obj;
+		}
+	} else {
+		return obj;
+	}
+}
+
+function expandPathInObj(obj, key: string, value) {
+	const parts = key.split(".");
+	let tmp = obj;
+	for (let index = 0; index < parts.length; index++) {
+		const p = parts[index];
+		if (index === parts.length - 1) {
+			tmp[p] = value;
+			break;
+		}
+
+		if (tmp[p] && isObject(tmp[p])) {
+			tmp = tmp[p];
+		} else {
+			tmp[p] = {};
+			tmp = tmp[p];
+		}
+	}
+}
+
+function isObject(val) {
+	return typeof val !== null && typeof val === 'object';
+}
+
 export function toAbsDir(path: string, wsRoot: string) {
   let dir = path || wsRoot;
   if (!p.isAbsolute(dir)) {

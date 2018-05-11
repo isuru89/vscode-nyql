@@ -6,6 +6,7 @@ import * as hb from "handlebars";
 import { replaceQuery } from "../commands/replaceNyQL";
 import { getExecutedResultWithData } from "../commands/executeScript";
 import nySettings from "../nySettings";
+import { objectize } from "../utils";
 
 const DEV = process.env['NYQL_VSCODE_DEV'] || false;
 
@@ -83,11 +84,26 @@ export class NyQLParsedView implements vscode.Disposable {
   private renderParsedView(result) {
     console.log(result);
     let ps = {};
-    result.params.forEach(p => {
-      ps[p.name] = (result.userParams && result.userParams[p.name]) || this.getDefValue(p)
-    });
+
+    if (result.parsable === false) {
+      const tmpSessVar = (result.info.usedSessionVars as string[]).map(s => { return { name: s, type: 'AParam' } });
+      result.params = tmpSessVar.concat(result.info.params);
+      result.query = "> This is not parseable as it contains $SESSION or 'script'/'RUN' calls.\n" +
+        "> Fill the parameters and press 'Execute' button to see the query result.";
+    }
+
+    if (result.params) {
+      result.params.forEach(p => {
+        ps[p.name] = (result.userParams && result.userParams[p.name]) || this.getDefValue(p)
+      });
+    }
+
+    console.log(ps);
+    ps = objectize(ps);
 
     const evt = { 
+      parsable: result.parsable,
+      info: result.info,
       query: result.query, 
       params: JSON.stringify(result.params, null, 2), 
       userParams: JSON.stringify(ps, null, 2),

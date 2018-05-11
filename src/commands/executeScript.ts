@@ -6,7 +6,7 @@ import nySettings from "../nySettings";
 import nyClient from "../client/nyClient";
 import { fetchAllReqParams, readFileAsJson, createDataFile, filenameWithouExt,
   getMissingParameters, createSnippetParams, replaceText } from "../utils";
-import { getParsedResult, parseScript } from "./parseScript";
+import { getParsedResult, parseScriptAndShow } from "./parseScript";
 
 const Win = vscode.window;
 
@@ -16,7 +16,11 @@ export async function executeScript() {
   const textEditor = Win.activeTextEditor;
   if (textEditor && textEditor.document.languageId === 'nyql') {
     const parsedResult = await getParsedResult();
-    await parseScript();
+    if (parsedResult.parsable === false) {
+      parseScriptAndShow(parsedResult, textEditor);
+      return;
+    }
+    await parseScriptAndShow(parsedResult, textEditor);
     const reqParams = fetchAllReqParams(parsedResult);
 
     if (reqParams && reqParams.length > 0) {

@@ -30,6 +30,10 @@
       right: 0;
       left: 0;
     }
+    .disabledButton {
+      pointer-events: none;
+      opacity: 0.4;
+    }
     .nyButton {
       padding: 5px 10px;
       cursor: pointer;
@@ -70,14 +74,22 @@
   <div id="srcFileName" style="display: none;">{{file}}</div>
   <div id="rootContainer">
   <div>
+      {{#if parsable}}
       <div class="headerButton nyButton" onclick="showEditorQ();">Generated Query</div>
+      {{else}}
+      <div class="headerButton nyButton disabledButton" onclick="showEditorQ();">Generated Query</div>
+      {{/if}}
   </div>
   <div style="width: 100%; height: 100%;">
       <pre id="editorQ">{{query}}</pre>
       <pre id="editorR" style="display: none;">Relaced Query</pre>
   </div>
   <div>
+    {{#if parsable}}
     <div id="btnReplace" class="nyButton" onclick="callReplacer();" title="Click to see parameter replaced query.">Replace</div>
+    {{else}}
+    <div id="btnReplace" class="nyButton disabledButton" onclick="callReplacer();" title="Click to see parameter replaced query.">Replace</div>
+    {{/if}}
     <div id="btnExecute" class="nyButton" onclick="callExecutor();" title="Execute the query with given parameters.">Execute</div>
   </div>
   <div><pre id="paramOrder" style="display: none;">{{params}}</pre></div>

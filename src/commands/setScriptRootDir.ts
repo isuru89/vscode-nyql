@@ -20,7 +20,7 @@ export async function setRootScriptDir() {
   if (rootDir) {
     let wsroot = Ws.rootPath;
     let dir = toAbsDir(rootDir, wsroot);
-    nySettings.scriptsDir = dir;
+    nySettings.setScriptsDir(dir);
     Win.showInformationMessage("NyQL script directory set to: \n" + dir);
   }
 }
