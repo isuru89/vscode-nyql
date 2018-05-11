@@ -13,6 +13,7 @@ import nySettings from "./nySettings";
 import * as commands from "./commands";
 import nyClient from "./client/nyClient";
 import { NyReferenceProvider } from "./providers/nyReferences";
+import { NyDefinitionProvider } from "./providers/nyDefinitionProvider";
 
 export async function activate(context: vscode.ExtensionContext) {
   const NY_MODE = { language: 'nyql' };
@@ -40,10 +41,11 @@ export async function activate(context: vscode.ExtensionContext) {
   //   await nySettings.refreshDb(nycon);
   // }
 
+  context.subscriptions.push(vscode.languages.registerDefinitionProvider(NY_MODE, new NyDefinitionProvider()));
   context.subscriptions.push(vscode.languages.registerReferenceProvider(NY_MODE, new NyReferenceProvider()));
   context.subscriptions.push(vscode.languages.registerCompletionItemProvider("nyql", new NyQLCompletionItemProvider(), 
     '.', '(', '/', "'", '\"', '$'));
-
+  
 }
 
 export async function deactivate() {

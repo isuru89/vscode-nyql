@@ -98,7 +98,6 @@ export class NyQLParsedView implements vscode.Disposable {
       });
     }
 
-    console.log(ps);
     ps = objectize(ps);
 
     const evt = { 

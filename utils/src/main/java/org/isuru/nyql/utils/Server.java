@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -189,6 +190,12 @@ public class Server extends NanoHTTPD {
         String cmd = input.get("cmd");
         if (cmd.equalsIgnoreCase("deps")) {
             return JsonOutput.toJson(Deps.process(input));
+        } else if (cmd.equalsIgnoreCase("linecount")) {
+            String file = input.get("file");
+            long count = Files.lines(new File(file).toPath()).count();
+            Map<String, Object> map = new HashMap<>();
+            map.put("lines", count);
+            return JsonOutput.toJson(map);
         } else if (cmd.equalsIgnoreCase("refs")) {
             return JsonOutput.toJson(Refs.process(input));
         } else if (cmd.equalsIgnoreCase("convert")) {
