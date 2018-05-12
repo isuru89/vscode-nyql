@@ -71,7 +71,7 @@ export class NyQLCompletionItemProvider
     context: vscode.CompletionContext
   ): vscode.ProviderResult<vscode.CompletionItem[] | vscode.CompletionList> {
 
-    if (this.nyDb.isClosed()) {
+    if (this.nyDb.isClosed() || !this.DEF_TABLE_ITEMS || this.DEF_TABLE_ITEMS.length === 0) {
       this._reloadDb();
       if (this.nyDb.isClosed()) return Promise.resolve([]);
     }

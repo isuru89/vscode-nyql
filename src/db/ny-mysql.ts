@@ -87,7 +87,7 @@ export class NyMySqlImpl implements NyDatabaseImpl {
                 const tbl = this.originalCon.autoCapitalizeTableNames ? this.toTitleCase(tblNames[i]) : tblNames[i];
                 tables.add(new NyTable(tbl, db));
 
-                const [colDefs, colFields] = await this.connection.query('DESCRIBE `' + tbl + '`;');
+                const [colDefs, colFields] = await this.connection.query('DESCRIBE ' + tbl + ';');
                 const cols = colDefs as mysql.RowDataPacket[];
                 columns.set(tbl, this._mapToCols(cols));
             }

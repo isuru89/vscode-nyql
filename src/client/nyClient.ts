@@ -13,6 +13,7 @@ class NyClient {
   private javaProc: ChildProcess;
 
   start(extPath: string) {
+    console.log("Running in dev mode:", DEV);
     if (DEV) {
       return this.doPing();
     } else {

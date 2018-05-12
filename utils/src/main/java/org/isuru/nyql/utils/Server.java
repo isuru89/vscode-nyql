@@ -56,6 +56,9 @@ public class Server extends NanoHTTPD {
     private static void start(String[] args) throws Exception {
         Map<String, String> map = NHelper.argParser(args);
         String port = map.get("p");
+        if (port == null || port.trim().isEmpty()) {
+            port = "9887";
+        }
         System.out.println("Starting with port: " + port);
         int p = Integer.parseInt(port);
 
@@ -207,6 +210,7 @@ public class Server extends NanoHTTPD {
         } else if (cmd.equalsIgnoreCase("con")) {
             createInst(input);
         } else if (cmd.equalsIgnoreCase("exit")) {
+            System.out.println("Shutdown signal received!");
             shutdownAllNyQL();
             stop();
         } else if (cmd.equalsIgnoreCase("ping")) {

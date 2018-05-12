@@ -12,6 +12,11 @@
             "env": {
                 "NYQL_VSCODE_DEV": "true"
             },
+            "linux": {
+                "env": {
+                    "NYQL_VSCODE_DEV": "true"
+                }
+            },
             "runtimeExecutable": "${execPath}",
             "sourceMaps": true,
             "args": [

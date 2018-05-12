@@ -276,7 +276,7 @@ class Parser {
                     .forDatabase(dialect)
                     .scriptFolder(new File(scriptDir))
                     .jdbcOptions(url, username, password)
-                    .withCaching(true, false, true, true)
+                    .withCaching(true, false, true)
                     .build();
             return NyQLInstance.create(build);
         } catch (NyException ex) {
