@@ -9,7 +9,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <nyql.version>2.0-rc4-SNAPSHOT</nyql.version>
+        <nyql.version>2.0-rc4</nyql.version>
     </properties>
 
     <dependencies>
