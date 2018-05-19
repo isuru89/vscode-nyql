@@ -63,7 +63,7 @@ function registerCommands(ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push(vscode.commands.registerCommand('nyql.connectForNyQL', commands.connectToNyQL));
   ctx.subscriptions.push(vscode.commands.registerCommand('nyql.reloadSchema', commands.reloadSchema));
   ctx.subscriptions.push(vscode.commands.registerCommand('nyql.setDefaultConnection', commands.setDefaultConnection));
-  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.parseScript', commands.parseScript));
-  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.executeScript', commands.executeScript));
+  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.parseScript', uri => commands.parseScript(uri)));
+  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.executeScript', uri => commands.executeScript(uri)));
   ctx.subscriptions.push(vscode.commands.registerCommand('nyql.convertFromSql', commands.convertSqlToNyQL));
 }

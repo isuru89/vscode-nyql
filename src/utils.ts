@@ -71,6 +71,7 @@ export function isPositionInString(document: vscode.TextDocument, position: vsco
 }
 
 export function filenameWithouExt(path: string): string {
+	if (!path) return null;
   const bsname = p.basename(path)
 	const pos = bsname.lastIndexOf('.');
 	if (pos > 0) {

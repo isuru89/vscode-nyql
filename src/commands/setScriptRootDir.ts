@@ -3,10 +3,11 @@ import { existsSync, lstatSync } from "fs";
 
 import nySettings from "../nySettings";
 import { toAbsDir } from "../utils";
+import { validUri } from "./utils";
 
 export async function setRootScriptDir(uri: Uri = null) {
   let dir = null;
-  if (uri && uri.fsPath && existsSync(uri.fsPath) && lstatSync(uri.fsPath).isDirectory()) {
+  if (validUri(uri) && lstatSync(uri.fsPath).isDirectory()) {
     dir = uri.fsPath;
   } else {
     const rootDir = await Win.showInputBox({

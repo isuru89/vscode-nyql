@@ -8,12 +8,13 @@ import { fetchAllReqParams, readFileAsJson, createDataFile, filenameWithouExt,
   getMissingParameters, createSnippetParams, replaceText } from "../utils";
 import { getParsedResult, parseScriptAndShow } from "./parseScript";
 import { connectForNyQL } from "./connectToNyQL";
+import { validUri } from "./utils";
 
 const Win = vscode.window;
 
 // @TODO parameterize this so query can execute when json file is activated
 // @TODO check file save status and warn user
-export async function executeScript() {
+export async function executeScript(uri: vscode.Uri = null) {
   if (!nySettings.getActiveNyConnection()) {
     const uresult = await Win.showWarningMessage('You have not connected to a database yet!\nDo you want to connect now?',
       'Yes', 'No');
@@ -24,49 +25,61 @@ export async function executeScript() {
     }
   }
 
-  const textEditor = Win.activeTextEditor;
-  if (textEditor && textEditor.document.languageId === 'nyql') {
-    const parsedResult = await getParsedResult();
+  const txtEditor = Win.activeTextEditor;
+  let fsPath = null;
+  let parsedResult = null;
+  if (uri) {
+    fsPath = uri.fsPath;
+    parsedResult = await getParsedResult(uri);
+  } else if (txtEditor && txtEditor.document.languageId === 'nyql') {
+    fsPath = txtEditor.document.fileName;
+    parsedResult = await getParsedResult();
+  } else {
+    Win.showErrorMessage('Select a file from explorer or open a file in editor and then try again!');
+    return;
+  }
+
     if (parsedResult.parsable === false) {
-      parseScriptAndShow(parsedResult, textEditor);
+      parseScriptAndShow(parsedResult, txtEditor, uri);
       return;
     }
-    await parseScriptAndShow(parsedResult, textEditor);
+    //parseScriptAndShow(parsedResult, txtEditor, uri);
     const reqParams = fetchAllReqParams(parsedResult);
 
     if (reqParams && reqParams.length > 0) {
+      console.log(reqParams);
+      parseScriptAndShow(parsedResult, txtEditor, uri);
+      return;
       // parameters required...
-      const filename = createDataFile(textEditor.document.fileName + '.json');
-      // read json file
-      let jsonData = readFileAsJson(filename, null);
-      if (!jsonData) {
-        // no data
-        const doc = await vscode.workspace.openTextDocument(filename);
-        const editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.Two, true);
-        vscode.window.showWarningMessage('You need some parameters to run this query!');
-        replaceText(editor, createSnippetParams({}, reqParams.map(r => r.name)));
-        return;
-      } else {
-        // check json data is enough to run query
-        const missed: string[] = getMissingParameters(jsonData, reqParams);
-        if (missed.length > 0) {
-          // prompt user to insert missing params
+      // const filename = createDataFile(fsPath + '.json');
+      // // read json file
+      // let jsonData = readFileAsJson(filename, null);
+      // if (!jsonData) {
+      //   // no data
+      //   const doc = await vscode.workspace.openTextDocument(filename);
+      //   const editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.Two, true);
+      //   vscode.window.showWarningMessage('You need some parameters to run this query!');
+      //   replaceText(editor, createSnippetParams({}, reqParams.map(r => r.name)));
+      //   return;
+      // } else {
+      //   // check json data is enough to run query
+      //   const missed: string[] = getMissingParameters(jsonData, reqParams);
+      //   if (missed.length > 0) {
+      //     // prompt user to insert missing params
 
-          const doc = await vscode.workspace.openTextDocument(filename);
-          const editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.Two, true);
-          const snp = createSnippetParams(jsonData, missed);
-          replaceText(editor, snp);
-          return;
-        } 
-      }
-
+      //     const doc = await vscode.workspace.openTextDocument(filename);
+      //     const editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.Two, true);
+      //     const snp = createSnippetParams(jsonData, missed);
+      //     replaceText(editor, snp);
+      //     return;
+      //   } 
+      // }
     }
 
     // now we are ok to run query
-    const result = await getExecutedResult(textEditor);
-    const title = 'Executed: ' + filenameWithouExt(textEditor.document.fileName);
+    const result = await getExecutedResult(txtEditor, uri);
+    const title = 'Executed: ' + filenameWithouExt(fsPath);
     nySettings.execWebView.update(result, title).activate();
-  }
 }
 
 export async function getExecutedResultWithData(file:string, data) {
@@ -104,21 +117,21 @@ export async function getExecutedResultWithData(file:string, data) {
 }
 
 // @TODO remove duplicates
-async function getExecutedResult(textEditor: vscode.TextEditor) {
-  if (textEditor) {
-    const activeDocFullPath = textEditor.document.fileName;
-    const data = readFileAsJson(activeDocFullPath + '.json');
+async function getExecutedResult(textEditor: vscode.TextEditor, uri: vscode.Uri = null) {
+  let fsPath = null;
 
-    const result = await getExecutedResultWithData(activeDocFullPath, data);
-    // const result = await nyClient.sendMessage({
-    //   cmd: 'execute',
-    //   name: nySettings.getActiveNyConnection().name,
-    //   path: relPath,
-    //   data: data
-    // });
-    console.log(result);
+  if (validUri(uri)) {
+    fsPath = uri.fsPath;
+  } else if (textEditor) {
+    fsPath = textEditor.document.fileName;
+  } 
+  
+  if (fsPath) {
+    const data = readFileAsJson(fsPath + '.json');
+
+    const result = await getExecutedResultWithData(fsPath, data);
+    // console.log(result);
     return result;
-  } else {
-    return null;
   }
+  return null;
 }

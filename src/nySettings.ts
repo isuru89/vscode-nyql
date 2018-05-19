@@ -128,9 +128,10 @@ class NySettings implements vscode.Disposable {
       return null;
     }
 
-    return vscode.window.withProgress({
+    const baseTitle = `Connecting to ${con.name}: ${con.host}:${con.port}...`;
+    return await vscode.window.withProgress({
       location: vscode.ProgressLocation.Notification,
-      title: `Connecting to ${con.name}: ${con.host}:${con.port}...`,
+      title: baseTitle,
       cancellable: false
     }, (progress, token) => {
       this.statusBar.command = null;
@@ -139,15 +140,20 @@ class NySettings implements vscode.Disposable {
       return this.db.close()
       .then(ok => this.db.reloadConnection(con))
       .then(ok => this.db.loadSchema())
-      .then(ok => nyClient.sendMessage({
-        cmd: 'con',
-        scriptDir: this.scriptsDir,
-        ...con
-      })).then(ok => {
+      .then(ok => {
+        progress.report({ message: baseTitle + ' // Creating NyQL instance...' });
+        return nyClient.sendMessageAsync({
+          cmd: 'con',
+          scriptDir: this.scriptsDir,
+          ...con
+          });
+      }).then(ok => {
+        progress.report({ message: baseTitle + " // Completed." });
         this.refreshStatusText();
         this.statusBar.command = 'nyql.connectForNyQL';
         return Promise.resolve(con);
       }).catch(err => {
+        progress.report({ message: baseTitle + ' // Error!' })
         this.statusBar.text = '$(database) NyQL: <Error>';
         return Promise.reject(err)
       });

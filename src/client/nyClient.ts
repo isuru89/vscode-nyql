@@ -64,6 +64,10 @@ class NyClient {
     return response.data;
   }
 
+  sendMessageAsync(command: any) {
+    return Axios.post(URL, command);
+  }
+
   async close() {
     if (!DEV) {
       await Axios.post(URL, { cmd: 'exit' });

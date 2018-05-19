@@ -231,6 +231,8 @@ public class Server extends NanoHTTPD {
                     result.put("parsable", Parser.canParsable(scriptInfo));
                     result.put("info", scriptInfo);
                     return JsonOutput.toJson(result);
+                } else {
+                    result.put("parsable", true);
                 }
                 String path = input.get("path");
                 String data = input.get("data");
@@ -267,7 +269,7 @@ public class Server extends NanoHTTPD {
                 return JsonOutput.toJson(map);
             }
         }
-        return "{}";
+        return JsonOutput.toJson(new HashMap<>());
     }
 
     private synchronized void removeNyQL(String name) {
