@@ -7,12 +7,23 @@ import nyClient from "../client/nyClient";
 import { fetchAllReqParams, readFileAsJson, createDataFile, filenameWithouExt,
   getMissingParameters, createSnippetParams, replaceText } from "../utils";
 import { getParsedResult, parseScriptAndShow } from "./parseScript";
+import { connectForNyQL } from "./connectToNyQL";
 
 const Win = vscode.window;
 
 // @TODO parameterize this so query can execute when json file is activated
 // @TODO check file save status and warn user
 export async function executeScript() {
+  if (!nySettings.getActiveNyConnection()) {
+    const uresult = await Win.showWarningMessage('You have not connected to a database yet!\nDo you want to connect now?',
+      'Yes', 'No');
+    if (uresult === 'Yes') {
+      await connectForNyQL();
+    } else {
+      return;
+    }
+  }
+
   const textEditor = Win.activeTextEditor;
   if (textEditor && textEditor.document.languageId === 'nyql') {
     const parsedResult = await getParsedResult();

@@ -57,7 +57,7 @@ export async function deactivate() {
 
 
 function registerCommands(ctx: vscode.ExtensionContext) {
-  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.setRootScriptDir', commands.setRootScriptDir));
+  ctx.subscriptions.push(vscode.commands.registerCommand('nyql.setRootScriptDir', uri => commands.setRootScriptDir(uri)));
   ctx.subscriptions.push(vscode.commands.registerCommand('nyql.createNewNyQLConnection', commands.createNyQLConnection));
   ctx.subscriptions.push(vscode.commands.registerCommand('nyql.removeNyQLConnection', commands.removeNyQLConnection));
   ctx.subscriptions.push(vscode.commands.registerCommand('nyql.connectForNyQL', commands.connectToNyQL));

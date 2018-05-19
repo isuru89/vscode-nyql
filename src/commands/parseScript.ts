@@ -5,13 +5,14 @@ import * as path from "path";
 import nySettings from "../nySettings";
 import nyClient from "../client/nyClient";
 import { filenameWithouExt } from "../utils";
+import { connectForNyQL } from "./connectToNyQL";
 
 const Win = vscode.window;
 
 export async function getParsedResult() {
   if (Win.activeTextEditor) {
     const textEditor = Win.activeTextEditor;
-    if (textEditor.document.isDirty) {
+    if (textEditor.document && textEditor.document.isDirty) {
       const response = await Win.showInformationMessage("You have unsaved changes in this file! Do you want to save and parse the query?",
        "Yes", "No");
        if (response !== "Yes") {
@@ -42,7 +43,18 @@ export async function getParsedResult() {
 
 export async function parseScript() {
   try {
+    if (!nySettings.getActiveNyConnection()) {
+      const uresult = await Win.showWarningMessage('You have not connected to a database yet!\nDo you want to connect now?',
+        'Yes', 'No');
+      if (uresult === 'Yes') {
+        await connectForNyQL();
+      } else {
+        return;
+      }
+    }
+
     let result = await getParsedResult();
+    console.log(result);
     parseScriptAndShow(result, Win.activeTextEditor);
   } catch (err) {
     nySettings.parsedWebView.updateError(err).activate();

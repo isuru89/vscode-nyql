@@ -26,6 +26,7 @@
           "NyQL",
           "nyql"
         ],
+        "firstLine": "^#!\\s*(nyql)\\b",
         "extensions": [
           ".nyql",
           ".groovy"
@@ -98,7 +99,7 @@
     },
     "commands": [
       {
-        "title": "Parse This Script",
+        "title": "Parse NyQL Script",
         "command": "nyql.parseScript",
         "category": "NyQL"
       },
@@ -143,6 +144,18 @@
         "category": "NyQL"
       }
     ],
+    "keybindings":[
+      {
+        "command": "nyql.executeScript",
+        "key": "ctrl+e",
+        "when": "editorFocus && editorLangId == nyql"
+      },
+      {
+        "command": "nyql.parseScript",
+        "key": "ctrl+p",
+        "when": "editorFocus && editorLangId == nyql"
+      }
+    ],
     "grammars": [
       {
         "language": "nyql",
@@ -167,6 +180,20 @@
           "command": "nyql.executeScript",
           "when": "resourceLangId == nyql",
           "group": "1_nyqlactions"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "nyql.setRootScriptDir",
+          "when": "explorerResourceIsFolder"
+        },
+        {
+          "command": "nyql.parseScript",
+          "when": "resourceLangId == nyql"
+        },
+        {
+          "command": "nyql.executeScript",
+          "when": "resourceLangId == nyql"
         }
       ]
     }

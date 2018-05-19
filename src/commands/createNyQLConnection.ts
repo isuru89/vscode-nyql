@@ -1,10 +1,10 @@
-import { window as Win } from "vscode";
+import { window as Win, ProgressLocation } from "vscode";
 
 import nySettings from "../nySettings";
 import { NyConnection } from "../nyModel";
+import { version } from "punycode";
 
 export async function createNewNyQLConnection() {
-  let name = await Win.showInputBox({ prompt: 'Enter a name for new NyQL connection' });
   const dialect = await Win.showQuickPick(['MySQL']);
   if (!dialect) {
     Win.showInformationMessage('You cancelled the NyQL connection creation!');
@@ -19,6 +19,7 @@ export async function createNewNyQLConnection() {
   const user = await Win.showInputBox({ prompt: 'Username for the database' });
   const pw = await Win.showInputBox({ prompt: 'Password for the database. Keep empty if no password is needed.', password: true });
   
+  let name = await Win.showInputBox({ prompt: 'Enter a name for new NyQL connection' });
   let nameFlag: boolean = false;
   if (!name) {
     name = host + "/";
@@ -34,7 +35,13 @@ export async function createNewNyQLConnection() {
   } as NyConnection;
 
   try {
-    const dbNames = await nySettings.getDb().loadDatabaseNames(nycon);
+     const dbNames = await Win.withProgress({
+      location: ProgressLocation.Notification,
+      title: 'Loading database names...',
+    }, (progress, token) => {
+      return nySettings.getDb().loadDatabaseNames(nycon);
+    });
+    // const dbNames = await nySettings.getDb().loadDatabaseNames(nycon);
     const dbName = await Win.showQuickPick(dbNames);
     nycon.databaseName = dbName;
     if (nameFlag) nycon.name = nycon.name + dbName;
