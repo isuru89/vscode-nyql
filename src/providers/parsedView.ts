@@ -49,13 +49,32 @@ export class NyQLParsedView implements vscode.Disposable {
       } else if (msg.command === 'execute') {
         console.log(msg);
         const file = msg.file;
-        getExecutedResultWithData(file, msg.data).then(result => {
+        const pdata = this.safeParse(msg.data);
+        if (pdata) nySettings.setRecentParameters(file, pdata);
+
+        getExecutedResultWithData(file, pdata).then(result => {
           nySettings.execWebView.update(result).activate();
         }).catch(err => {
           vscode.window.showErrorMessage("Failed to execute query! Reason: " + err.message);
         })
       }
     });
+  }
+
+  private safeParse(dataFromView, def = null) {
+    if (!dataFromView) {
+      return def;
+    }
+
+    try {
+      if (typeof dataFromView === 'string') {
+        return JSON.parse(dataFromView);
+      } else {
+        return dataFromView;
+      }
+    } catch (err) {
+      return def;
+    }
   }
 
   private loadHtml(extPath: string, fileName: string): string {
@@ -73,7 +92,11 @@ export class NyQLParsedView implements vscode.Disposable {
     });
   }
 
-  private getDefValue(p) {
+  private getDefValue(p, srcObj) {
+    if (srcObj && typeof srcObj[p.name] !== 'undefined') {
+      return srcObj[p.name];
+    }
+
     if (p.type === 'ParamList') {
       return [];
     } else {
@@ -84,6 +107,7 @@ export class NyQLParsedView implements vscode.Disposable {
   private renderParsedView(result) {
     console.log(result);
     let ps = {};
+    const data = nySettings.getRecentParameters(result.file);
 
     if (result.parsable === false) {
       const tmpSessVar = (result.info.usedSessionVars as string[]).map(s => { return { name: s, type: 'AParam' } });
@@ -94,7 +118,7 @@ export class NyQLParsedView implements vscode.Disposable {
 
     if (result.params) {
       result.params.forEach(p => {
-        ps[p.name] = (result.userParams && result.userParams[p.name]) || this.getDefValue(p)
+        ps[p.name] = (result.userParams && result.userParams[p.name]) || this.getDefValue(p, data)
       });
     }
 

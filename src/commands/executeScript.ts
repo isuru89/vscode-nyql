@@ -50,30 +50,6 @@ export async function executeScript(uri: vscode.Uri = null) {
       console.log(reqParams);
       parseScriptAndShow(parsedResult, txtEditor, uri);
       return;
-      // parameters required...
-      // const filename = createDataFile(fsPath + '.json');
-      // // read json file
-      // let jsonData = readFileAsJson(filename, null);
-      // if (!jsonData) {
-      //   // no data
-      //   const doc = await vscode.workspace.openTextDocument(filename);
-      //   const editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.Two, true);
-      //   vscode.window.showWarningMessage('You need some parameters to run this query!');
-      //   replaceText(editor, createSnippetParams({}, reqParams.map(r => r.name)));
-      //   return;
-      // } else {
-      //   // check json data is enough to run query
-      //   const missed: string[] = getMissingParameters(jsonData, reqParams);
-      //   if (missed.length > 0) {
-      //     // prompt user to insert missing params
-
-      //     const doc = await vscode.workspace.openTextDocument(filename);
-      //     const editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.Two, true);
-      //     const snp = createSnippetParams(jsonData, missed);
-      //     replaceText(editor, snp);
-      //     return;
-      //   } 
-      // }
     }
 
     // now we are ok to run query
@@ -92,7 +68,11 @@ export async function getExecutedResultWithData(file:string, data) {
     }
   } catch (err) {
     Win.showErrorMessage("Invalid json data format given!");
-    return Promise.reject('Invalid json data format');
+    return Promise.reject('Invalid json data!');
+  }
+
+  if (!dataObj) {
+    return Promise.reject('Invalid json data!');
   }
 
   const baseScriptsDir = nySettings.scriptsDir;

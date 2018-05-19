@@ -9,6 +9,8 @@ import nyClient from "./client/nyClient";
 import { NyQLParsedView } from "./providers/parsedView";
 import { NyQLExecutionView } from "./providers/executionView";
 
+const RECENT_PARAMS_CACHE: Map<string, any> = new Map<string, any>();
+
 class NySettings implements vscode.Disposable {
 
   public extensionRoot;
@@ -205,6 +207,22 @@ class NySettings implements vscode.Disposable {
       this.refreshStatusText();
     }
     return con;
+  }
+
+  getRecentParameters(file: string) {
+    if (file) {
+      return RECENT_PARAMS_CACHE.get(file) || {};
+    } else {
+      return {};
+    }
+  }
+
+  setRecentParameters(file: string, data: any) {
+    if (file) {
+      RECENT_PARAMS_CACHE.set(file, data || {});
+    } else {
+      return {};
+    }
   }
 
   private _validateCon(con: NyConnection): boolean {
