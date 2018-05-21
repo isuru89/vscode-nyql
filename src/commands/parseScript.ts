@@ -74,7 +74,7 @@ export async function parseScript(uri: vscode.Uri = null) {
 export function parseScriptAndShow(result, txtEditor: vscode.TextEditor = null, uri: vscode.Uri = null) {
   if (result) {
     let fullFile = null;
-    if (uri) {
+    if (uri && uri.fsPath) {
       fullFile = uri.fsPath;
     } else if (txtEditor) {
       fullFile = txtEditor.document.fileName;

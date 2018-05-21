@@ -12,8 +12,6 @@ import { validUri } from "./utils";
 
 const Win = vscode.window;
 
-// @TODO parameterize this so query can execute when json file is activated
-// @TODO check file save status and warn user
 export async function executeScript(uri: vscode.Uri = null) {
   if (!nySettings.getActiveNyConnection()) {
     const uresult = await Win.showWarningMessage('You have not connected to a database yet!\nDo you want to connect now?',
@@ -100,7 +98,7 @@ export async function getExecutedResultWithData(file:string, data) {
 async function getExecutedResult(textEditor: vscode.TextEditor, uri: vscode.Uri = null) {
   let fsPath = null;
 
-  if (validUri(uri)) {
+  if (validUri(uri) && uri.fsPath) {
     fsPath = uri.fsPath;
   } else if (textEditor) {
     fsPath = textEditor.document.fileName;

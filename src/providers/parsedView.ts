@@ -112,8 +112,8 @@ export class NyQLParsedView implements vscode.Disposable {
     if (result.parsable === false) {
       const tmpSessVar = (result.info.usedSessionVars as string[]).map(s => { return { name: s, type: 'AParam' } });
       result.params = tmpSessVar.concat(result.info.params);
-      result.query = "> This is not parseable as it contains $SESSION or 'script'/'RUN' calls.\n" +
-        "> Fill the parameters and press 'Execute' button to see the query result.";
+      result.query = "> Script is not parsable as it contains dynamic calls.\n" +
+        "> Fill the parameters and click 'Execute' to see the result.";
     }
 
     if (result.params) {
