@@ -1,5 +1,7 @@
 import * as mysql from "mysql2/promise";
 
+import { KEYWORDS } from "./mysql-kw";
+
 import { NyDatabaseImpl, NyConnection, NySchemaInfo, NyDatabase, NyColumn, NyTable } from "../nyModel";
 
 const _RESERVED_TABLES: Set<string> = new Set<string>();
@@ -87,7 +89,11 @@ export class NyMySqlImpl implements NyDatabaseImpl {
                 const tbl = this.originalCon.autoCapitalizeTableNames ? this.toTitleCase(tblNames[i]) : tblNames[i];
                 tables.add(new NyTable(tbl, db));
 
-                const [colDefs, colFields] = await this.connection.query('DESCRIBE ' + tbl + ';');
+                let tblQuery = `DESCRIBE ${tbl};`;
+                if (KEYWORDS.indexOf(tbl.toUpperCase())) {
+                    tblQuery = 'DESCRIBE `' + tbl + '`;';
+                }
+                const [colDefs, colFields] = await this.connection.query(tblQuery);
                 const cols = colDefs as mysql.RowDataPacket[];
                 columns.set(tbl, this._mapToCols(cols));
             }
